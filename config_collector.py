@@ -55,6 +55,8 @@ def main():
     parser.add_argument("--max-threads", help="Max threads for parallel collection. Default = 10, Maximum is 100",
                         type=int, default=10, choices=range(10,101))
     parser.add_argument("--collection_dir", help="Directory for data collection", required=True)
+    parser.add_argument("--snapshot_name", help="Name for the snapshot directory",
+                        default=datetime.now().strftime("%Y%m%d %H:%M:%S"))
 
     args = parser.parse_args()
 
@@ -69,6 +71,7 @@ def main():
 
     username = args.username
     password = args.password
+    snapshot_name = args.snapshot_name
 
     collection_directory = args.collection_dir
     if not Path(collection_directory).exists():
@@ -79,8 +82,6 @@ def main():
     future_list = []
 
     start_time = datetime.now()
-    snapshot_name = start_time.strftime("%Y%m%d %H:%M:%S")  #use the UTC timestamp as snapshot name
-
     print(f"###Starting collection: {start_time}")
 
     for grp, grp_data in inventory.items():
