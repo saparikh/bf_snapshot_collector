@@ -3,7 +3,7 @@ cffi==1.15.0
 ConfigArgParse==1.5.3
 cryptography==35.0.0
 future==0.18.2
-netmiko==4.0.0a4
+-e git+https://github.com/ktbyers/netmiko.git@6e40610a7daea87129ff490a9131cf7d3b794dd5#egg=netmiko
 ntc-templates==3.0.0
 paramiko==2.8.0
 pycparser==2.21
