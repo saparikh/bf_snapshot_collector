@@ -7,19 +7,22 @@ the format required by Batfish and Batfish Enterprise
 
 ### Supported devices
 - Cisco ASA, IOS, IOS-XE, NXOS, IOS-XR
+- Cumulus Linux
 - Arista EOS
 - Juniper JunOS
 
 ### Inventory
 The collection script expects a valid Ansible inventory file. There is an `example_inventory.yml` file to 
-show you the expected format.
+show you the expected format. 
 
 The script does NOT support any variables defined per host, such as `ansible_host`. 
 Therefore, the server on which you are running this script must be able to resolve the DNS names
 
 ### Authentication
 All devices in the inventory MUST be accessible with the SAME username and password. That user MUST either be put into 
-`enable` mode or be granted correct privilege level to retrieve running configuration without being in `enable` mode
+`enable` mode or be granted correct privilege level to retrieve running configuration without being in `enable` mode.
+
+For Cumulus, make sure the user has password-less sudo access
 
 ### Setup
 
@@ -30,9 +33,7 @@ pip install -r requirements.txt
 
 2) Copy `sample.env` to `.env` and edit with correct user credentials and Batfish Enterprise installation
 
-3) Set environment variables `COLLECT_USER` and `COLLECT_PASSWORD`
-
-4) Run collection bash script
+3) Run collection bash script
 ```bash
 bash process_collection.sh <inventory file>
 ```

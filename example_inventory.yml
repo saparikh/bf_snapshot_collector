@@ -2,19 +2,19 @@ all:
   children:
     ciscoios:
       vars:
-        ansible_connection: network_cli
         ansible_network_os: cisco.ios.ios
       hosts:
               ios01: null
     ciscoiosxr:
       vars:
-        ansible_connection: network_cli
         ansible_network_os: cisco.iosxr.iosxr
       hosts:
               xr01: null
     cisconxos:
       vars:
-        ansible_connection: network_cli
         ansible_network_os: cisco.nxos.nxos
       hosts:
               nxos01: null
+    cumulus:
+      vars:
+        ansible_network_os: cumulus

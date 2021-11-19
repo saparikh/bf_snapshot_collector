@@ -27,13 +27,57 @@ def get_config(
 
     logger.info(f"Completed configuration collection for {device_name}")
 
+def get_config_eos(
+        device_session: dict, device_name: str, device_command: str, output_path: str, logger,
+) -> None:
+
+    cmd_timer = 240
+    logger.info(f"Trying to connect to {device_name}")
+    # todo: figure out to get logger name from the logger object that is passed in.
+    #  current setup just uses the device name for the logger name, so this works
+    net_connect = RetryingNetConnect(device_session, device_name)
+    net_connect.enable()  # enter enable mode
+
+    # Get the running config on the device
+    logger.info(f"Running {device_command} on {device_name}")
+    output = net_connect.run_command(device_command, cmd_timer)
+    write_output_to_file(device_name, output_path, device_command, output)
+
+    logger.info(f"Completed configuration collection for {device_name}")
+
+def get_config_cumulus(
+        device_session: dict, device_name: str, device_command: str, output_path: str, logger,
+) -> None:
+
+    cmd_timer = 240
+    logger.info(f"Trying to connect to {device_name}")
+    # todo: figure out to get logger name from the logger object that is passed in.
+    #  current setup just uses the device name for the logger name, so this works
+    net_connect = RetryingNetConnect(device_session, device_name)
+    cmd_list = [
+        "cat /etc/hostname",
+        "cat /etc/network/interfaces",
+        "cat /etc/cumulus/ports.conf",
+        "sudo cat /etc/frr/frr.conf",
+    ]
+
+    # Get the running config on the device
+    output = ""
+    for cmd in cmd_list:
+        logger.info(f"Running {cmd} on {device_name}")
+        output += net_connect.run_command(cmd, cmd_timer)
+
+    write_output_to_file(device_name, output_path, "cumulus_concatenated.txt", output)
+    logger.info(f"Completed configuration collection for {device_name}")
+
 OS_COLLECTOR_FUNCTION = {
-    "arista_eos": get_config,
+    "arista_eos": get_config_eos,
     "cisco_asa": get_config,
     "cisco_ios": get_config,
     "cisco_nxos": get_config,
     "cisco_xr": get_config,
     "juniper_junos": get_config,
+    "linux": get_config_cumulus,
 }
 
 OS_CONFIG_COMMAND = {
@@ -42,7 +86,8 @@ OS_CONFIG_COMMAND = {
     "cisco_ios": "show running-config",
     "cisco_nxos": "show running-config all",
     "cisco_xr": "show running-config",
-    "juniper_junos": "show configuration",
+    "juniper_junos": "show configuration | display set",
+    "linux": "ignore",
 }
 
 

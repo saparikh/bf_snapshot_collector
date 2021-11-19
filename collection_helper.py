@@ -52,6 +52,14 @@ class RetryingNetConnect(object):
             self._logger.debug(f"Command output: {_output}")
             return _output
 
+    def enable(self):
+        try:
+            self._net_connect.enable()
+        except Exception as exc:
+            self._logger.error(f"Failed to enter enable mode")
+            self._logger.error(f"Exception: {exc}")
+            pass
+
 
 def custom_logger(logger_name, log_file, level=logging.INFO):
     """
@@ -99,6 +107,7 @@ def get_netmiko_os(device_os: Text) -> Text:
         "cisco.nxos.nxos": "cisco_nxos",
         "cisco.ios.ios": "cisco_ios",
         "juniper.junos.junos": "juniper_junos",
+        "cumulus": "linux",
     }
 
     return ansible_netmiko_map.get(device_os, None)
