@@ -4,12 +4,19 @@ set -ou pipefail
 
 SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 BASE_DIR="$(dirname "${SCRIPT_DIR}")"
+ENV_FILE=.env
+
+if [[ -f "$ENV_FILE" ]]; then
+    echo ".env file does not exist"
+    exit 1
+fi
 
 if [[ -z ${1+x} ]]; then
     echo "Inventory file not supplied (usage: process_collection.sh <inventory file>)"
     exit 1
 fi
 
+source $ENV_FILE
 if [[ -z "${COLLECT_USER}" ]]; then
     echo "COLLECT_USER environment variable has not been defined"
     exit 1
@@ -47,5 +54,5 @@ echo "Completed collecting and processing snapshot"
 echo "Uploading configuration to Batfish Enterprise"
 python3 $SCRIPT_DIR/bfe_snapshot_upload.py --snapshot_dir $SNAPSHOT_DIR
 echo "New snapshot uploaded to Batfish Enterprise"
-python3 $SCRIPT_DIR/bfe_upload_snapshot.py --snapshot $SNAPSHOT_DIR --network MY_NETWORK
+python3 $SCRIPT_DIR/bfe_upload_snapshot.py --snapshot $SNAPSHOT_DIR --network "{BFE_NETWORK:-'MY_NETWORK'}"
 echo "Snapshot uploaded to Batfish Enterprise"
