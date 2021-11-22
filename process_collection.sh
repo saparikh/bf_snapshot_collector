@@ -7,7 +7,7 @@ BASE_DIR="$(dirname "${SCRIPT_DIR}")"
 # read the environment variables from the .env file. the python script also relies on the .env file
 ENV_FILE=.env
 
-if [[ -e "$ENV_FILE" ]]; then
+if [[ ! -f "$ENV_FILE" ]]; then
     echo ".env file does not exist"
     exit 1
 fi
@@ -52,8 +52,9 @@ grep -rle '^# Exported by' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(# Exported by 
 #grep -rle '^!Current configuration: ' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(!Current configuration: ).*$/\1REMOVED/g'
 echo "Completed collecting and processing snapshot"
 
+BFE_NETWORK=${BFE_NETWORK:="MY_NETWORK"}
 echo "Uploading configuration to Batfish Enterprise"
 #python3 $SCRIPT_DIR/bfe_snapshot_upload.py --snapshot_dir $SNAPSHOT_DIR
 #echo "New snapshot uploaded to Batfish Enterprise"
-python3 $SCRIPT_DIR/bfe_upload_snapshot.py --snapshot $SNAPSHOT_DIR --network "{BFE_NETWORK:-'MY_NETWORK'}"
+python3 $SCRIPT_DIR/bfe_upload_snapshot.py --snapshot $SNAPSHOT_DIR --network $BFE_NETWORK
 echo "Snapshot uploaded to Batfish Enterprise"
