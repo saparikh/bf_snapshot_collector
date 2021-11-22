@@ -12,7 +12,7 @@ class RetryingNetConnect(object):
         self._device_session = device_session
         self._logger = logging.getLogger(logger_name)
         try:
-            self._net_connect = ConnectHandler(**device_session)
+            self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
         except Exception as exc:
             self._logger.error(f"Skipped data collection, could not connect")
             self._logger.error(f"Exception: {exc}")
@@ -27,7 +27,7 @@ class RetryingNetConnect(object):
             self._logger.error("Trying to reconnect to allow other commands to run")
             # re-establish a new SSH session
             try:
-                self._net_connect = ConnectHandler(**self._device_session)
+                self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
             except Exception as exc:
                 self._logger.error(f"Cannot continue data collection for this device, could not reconnect")
                 self._logger.error(f"Exception: {exc}")
