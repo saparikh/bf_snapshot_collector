@@ -46,15 +46,9 @@ echo "Cleaning up timestamps that lead to spurious config differences"
 grep -rle '^!Running configuration last done at: ' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(!Running configuration last done at: ).*$/\1REMOVED/g'
 grep -rle '^!Time: ' ${SNAPSHOT_DIR} | xargs sed -i 's/^!Time: .*$/!Time: REMOVED/g'
 grep -rle '^# Exported by' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(# Exported by [^ ]+ on ).*$/\1REMOVED/g'
-# remote A10 configuration timestamps
-#grep -rle '^!Configuration last updated at ' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(!Configuration last updated at ).*$/\1REMOVED/g'
-#grep -rle '^!Configuration last saved at ' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(!Configuration last saved at ).*$/\1REMOVED/g'
-#grep -rle '^!Current configuration: ' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(!Current configuration: ).*$/\1REMOVED/g'
 echo "Completed collecting and processing snapshot"
 
 BFE_NETWORK=${BFE_NETWORK:="MY_NETWORK"}
 echo "Uploading configuration to Batfish Enterprise"
-#python3 $SCRIPT_DIR/bfe_snapshot_upload.py --snapshot_dir $SNAPSHOT_DIR
-#echo "New snapshot uploaded to Batfish Enterprise"
 python3 $SCRIPT_DIR/bfe_upload_snapshot.py --snapshot $SNAPSHOT_DIR --network $BFE_NETWORK
 echo "Snapshot uploaded to Batfish Enterprise"
