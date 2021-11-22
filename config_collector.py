@@ -102,7 +102,7 @@ def main():
                         type=int, default=10, choices=range(10,101))
     parser.add_argument("--collection_dir", help="Directory for data collection", required=True)
     parser.add_argument("--snapshot_name", help="Name for the snapshot directory",
-                        default=datetime.now().strftime("%Y%m%d %H:%M:%S"))
+                        default=datetime.now().strftime("%Y%m%d_%H:%M:%S"))
 
     args = parser.parse_args()
 

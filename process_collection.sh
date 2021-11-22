@@ -7,7 +7,7 @@ BASE_DIR="$(dirname "${SCRIPT_DIR}")"
 # read the environment variables from the .env file. the python script also relies on the .env file
 ENV_FILE=.env
 
-if [[ -f "$ENV_FILE" ]]; then
+if [[ -e "$ENV_FILE" ]]; then
     echo ".env file does not exist"
     exit 1
 fi
@@ -28,7 +28,7 @@ if [[ -z "${COLLECT_PASSWORD}" ]]; then
     exit 1
 fi
 
-INVENTORY = $1  #inventory file MUST be the first argument
+INVENTORY=$1  #inventory file MUST be the first argument
 COLLECTION_DIR="${2:-SCRIPT_DIR}"  #collection directory is the 2nd optional argument. if not set, uses SCRIPT_DIR
 
 if [[ ! -e ${COLLECTION_DIR} ]]; then
@@ -36,7 +36,7 @@ if [[ ! -e ${COLLECTION_DIR} ]]; then
     exit 1
 fi
 
-SNAPSHOT_NAME=`date +"%Y%m%d %H:%M:%S"`
+SNAPSHOT_NAME=`date +"%Y%m%d_%H:%M:%S"`
 SNAPSHOT_DIR=${COLLECTION_DIR}/${SNAPSHOT_NAME}
 
 echo "Attempting to run python script to collect configuration from devices"
