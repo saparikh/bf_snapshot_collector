@@ -1,28 +1,38 @@
 all:
   children:
+    aristaeos:
+      vars:
+        ansible_network_os: arista.eos.eos
+      hosts:
+        eos01: null
+    ciscoasa:
+      vars:
+        ansible_network_os: cisco.asa.asa
+      hosts:
+        asa01: null
     ciscoios:
       vars:
         ansible_network_os: cisco.ios.ios
       hosts:
-              ios01:
-                ansible_host: 10.1.1.1
+        ios01:
+          ansible_host: 10.1.1.1
     ciscoiosxr:
       vars:
         ansible_network_os: cisco.iosxr.iosxr
       hosts:
-              xr01: null
+        xr01: null
     cisconxos:
       vars:
         ansible_network_os: cisco.nxos.nxos
       hosts:
-              nxos01: null
+        nxos01: null
     cumulus:
       vars:
         ansible_network_os: cumulus
       hosts:
-              frr01: null
+        frr01: null
     juniper:
       vars:
         ansible_network_os: juniper.junos.junos
       hosts:
-              junos01: null
+        junos01: null
