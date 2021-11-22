@@ -4,7 +4,8 @@ all:
       vars:
         ansible_network_os: cisco.ios.ios
       hosts:
-              ios01: null
+              ios01:
+                ansible_host: 10.1.1.1
     ciscoiosxr:
       vars:
         ansible_network_os: cisco.iosxr.iosxr
@@ -18,3 +19,10 @@ all:
     cumulus:
       vars:
         ansible_network_os: cumulus
+      hosts:
+              frr01: null
+    juniper:
+      vars:
+        ansible_network_os: juniper.junos.junos
+      hosts:
+              junos01: null

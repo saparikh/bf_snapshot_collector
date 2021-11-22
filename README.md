@@ -15,8 +15,8 @@ the format required by Batfish and Batfish Enterprise
 The collection script expects a valid Ansible inventory file. There is an `example_inventory.yml` file to 
 show you the expected format. 
 
-The script does NOT support any variables defined per host, such as `ansible_host`. 
-Therefore, the server on which you are running this script must be able to resolve the DNS names
+The device name must either be resolvable via DNS or you must specify the `ansible_host` variable for the device.
+Your inventory may have a mix of devices which are resolvable via DNS and devices that use the `ansible_host` variable.
 
 ### Authentication
 All devices in the inventory MUST be accessible with the SAME username and password. That user MUST either be put into 
