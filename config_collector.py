@@ -138,7 +138,7 @@ def main():
             print(f"Unsupported operating system {device_os}, skipping...")
             continue
 
-        for device_name, _ in grp_data.get('hosts').items():
+        for device_name, device_vars in grp_data.get('hosts').items():
             log_file = f"{collection_directory}/logs/{snapshot_name}/{device_name}/collector.log"
             try:
                 os.makedirs(os.path.dirname(log_file), exist_ok=True)
@@ -150,10 +150,17 @@ def main():
             logger.info(f"Starting collection for {device_name}")
             logger.debug(f"Group {grp}, Group_data {grp_data}")
 
+            # by default use the device name specified in inventory
+            _host = device_name
+            # override it with the IP address if specified in the inventory
+            if device_vars.get("ansible_host", None) is not None:
+                _host = device_vars.get("ansible_host")
+                logger.info(f"Using IP {_host} to connect to device {device_name}")
+
             # create device_session for netmiko connection handler
             device_session = {
                 "device_type": device_os,
-                "host": device_name,
+                "host": _host,
                 "username": username,
                 "password": password,
                 "session_log": f"{collection_directory}/logs/{snapshot_name}/{device_name}/netmiko_session.log",

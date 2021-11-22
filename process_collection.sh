@@ -4,6 +4,7 @@ set -ou pipefail
 
 SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 BASE_DIR="$(dirname "${SCRIPT_DIR}")"
+# read the environment variables from the .env file. the python script also relies on the .env file
 ENV_FILE=.env
 
 if [[ -f "$ENV_FILE" ]]; then
@@ -12,7 +13,7 @@ if [[ -f "$ENV_FILE" ]]; then
 fi
 
 if [[ -z ${1+x} ]]; then
-    echo "Inventory file not supplied (usage: process_collection.sh <inventory file>)"
+    echo "Inventory file not supplied (usage: process_collection.sh <inventory file> <optional: collection directory>)"
     exit 1
 fi
 
@@ -52,7 +53,7 @@ grep -rle '^# Exported by' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(# Exported by 
 echo "Completed collecting and processing snapshot"
 
 echo "Uploading configuration to Batfish Enterprise"
-python3 $SCRIPT_DIR/bfe_snapshot_upload.py --snapshot_dir $SNAPSHOT_DIR
-echo "New snapshot uploaded to Batfish Enterprise"
+#python3 $SCRIPT_DIR/bfe_snapshot_upload.py --snapshot_dir $SNAPSHOT_DIR
+#echo "New snapshot uploaded to Batfish Enterprise"
 python3 $SCRIPT_DIR/bfe_upload_snapshot.py --snapshot $SNAPSHOT_DIR --network "{BFE_NETWORK:-'MY_NETWORK'}"
 echo "Snapshot uploaded to Batfish Enterprise"
