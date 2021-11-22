@@ -58,7 +58,7 @@ def get_config_cumulus(
         "cat /etc/hostname",
         "cat /etc/network/interfaces",
         "cat /etc/cumulus/ports.conf",
-        "sudo cat /etc/frr/frr.conf",
+        "cat /etc/frr/frr.conf",
     ]
 
     # Get the running config on the device
@@ -66,6 +66,7 @@ def get_config_cumulus(
     for cmd in cmd_list:
         logger.info(f"Running {cmd} on {device_name}")
         output += net_connect.run_command(cmd, cmd_timer)
+        output += "\n\n"
 
     write_output_to_file(device_name, output_path, "cumulus_concatenated.txt", output)
     logger.info(f"Completed configuration collection for {device_name}")
