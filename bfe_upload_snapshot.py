@@ -8,6 +8,12 @@ from pybfe.client.session import Session
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 ENV_FILE = os.path.join(SCRIPT_DIR, "env")
 
+
+def main(bf: Session, bfe_network: str, snapshot_dir: str) -> None:
+    bf.set_network(bfe_network)
+    bf.init_snapshot(snapshot_dir, name=Path(snapshot_dir).name)
+
+
 if __name__ == "__main__":
 
     parser = configargparse.ArgParser()
@@ -16,12 +22,12 @@ if __name__ == "__main__":
     parser.add_argument("--network", help="name of the network to init snapshots in", default="MY_NETWORK")
 
     args = parser.parse_args()
-    snapshot_path = args.snapshot
-    if not Path(snapshot_path).exists():
+    snapshot_path = Path(args.snapshot)
+    if not snapshot_path.exists():
         raise Exception(f"{snapshot_path} doesn't exist")
-    elif not Path(snapshot_path).is_dir():
+    elif not snapshot_path.is_dir():
         raise Exception(f"{snapshot_path} is not a directory")
-    elif not Path(f"{snapshot_path}/configs").exists():
+    elif not Path.joinpath(snapshot_path, "configs").exists():
         raise Exception(f"configs folder not found in {snapshot_path}")
 
     # Read BFE related ENV vars from the env file
@@ -29,7 +35,6 @@ if __name__ == "__main__":
         raise Exception(f"Env file {ENV_FILE} doesn't exist")
     config = dotenv_values(ENV_FILE)
 
-    bfe_network = args.network
     bfe_host = config.get('BFE_HOST', None)
     bfe_port = config.get('BFE_PORT', 443)
     bfe_access_token = config.get('BFE_ACCESS_TOKEN', None)
@@ -44,8 +49,4 @@ if __name__ == "__main__":
     except Exception as e:
         raise Exception(f"Unable to connect to Batfish Enterprise server. Exception {e}")
 
-    bf.set_network(bfe_network)
-    print(f"Initializing snapshot in {snapshot_path}")
-
-    snapshot_name = Path(snapshot_path).name
-    snapshot = bf.init_snapshot(snapshot_path, name=snapshot_name)
+    main(args.network, args.snapshot)
