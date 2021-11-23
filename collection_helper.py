@@ -6,7 +6,11 @@ from typing import Text, Dict
 import logging
 import yaml
 from netmiko import ConnectHandler
+from enum import Enum
 
+class COLLECT_STATUS(Enum):
+    PASS = 1
+    FAIL = 2
 
 class RetryingNetConnect(object):
 
@@ -20,9 +24,15 @@ class RetryingNetConnect(object):
             self._logger.error(f"Exception: {exc}")
             raise Exception
 
-    def run_command(self, cmd, cmd_timer):
+    def run_command(self, cmd, cmd_timer, pattern=None):
         try:
-            _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True)
+            if pattern is None:
+                self._logger.info("No pattern set to use as expect_string")
+                _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True)
+            else:
+                self._logger.info(f"Using {pattern} as expect_string")
+                _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True,
+                                                         expect_string=pattern)
         except socket.error as exc:
             self._logger.error(f"Socket error: {exc}\n")
             self._logger.error(f"Command {cmd} failed, skipping it")
