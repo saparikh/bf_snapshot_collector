@@ -30,6 +30,7 @@ fi
 
 INVENTORY=$1  # Inventory file MUST be the first argument
 COLLECTION_DIR="${2:-${SCRIPT_DIR}}"  # Collection directory is the 2nd optional argument. if not set, uses SCRIPT_DIR
+BFE_NETWORK="${BFE_NETWORK:-MY_NETWORK}"  # use network name if set in env; else 'MY_NETWORK'
 
 if [[ ! -e ${COLLECTION_DIR} ]]; then
     echo ${COLLECTION_DIR} does not exist
