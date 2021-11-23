@@ -26,15 +26,15 @@ For Cumulus, make sure the user has password-less sudo access
 
 ### Setup
 
-1) Create a python virtual environment and install dependencies
+1) Create a python (3.7+) virtual environment and install dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-2) Copy `sample.env` to `.env` and edit with correct user credentials and Batfish Enterprise installation
+2) Copy `example_env` to `env` and edit with correct user credentials and Batfish Enterprise installation
 
 3) Run collection bash script
 ```bash
-bash process_collection.sh <inventory file>
+bash snapshot_network.sh <inventory file>
 ```
 

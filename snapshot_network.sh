@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-set -ou pipefail
+set -eou pipefail
 
 SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 BASE_DIR="$(dirname "${SCRIPT_DIR}")"
-# read the environment variables from the .env file. the python script also relies on the .env file
-ENV_FILE=.env
+# we'll read the environment variables from the env file. the python script also relies on the env file
+ENV_FILE=${SCRIPT_DIR}/env
 
 if [[ ! -f "$ENV_FILE" ]]; then
-    echo ".env file does not exist"
+    echo env file ${ENV_FILE} does not exist
     exit 1
 fi
 
@@ -17,7 +17,7 @@ if [[ -z ${1+x} ]]; then
     exit 1
 fi
 
-source $ENV_FILE
+source ${ENV_FILE}
 if [[ -z "${COLLECT_USER}" ]]; then
     echo "COLLECT_USER environment variable has not been defined"
     exit 1
@@ -28,8 +28,8 @@ if [[ -z "${COLLECT_PASSWORD}" ]]; then
     exit 1
 fi
 
-INVENTORY=$1  #inventory file MUST be the first argument
-COLLECTION_DIR="${2:-SCRIPT_DIR}"  #collection directory is the 2nd optional argument. if not set, uses SCRIPT_DIR
+INVENTORY=$1  # Inventory file MUST be the first argument
+COLLECTION_DIR="${2:-${SCRIPT_DIR}}"  # Collection directory is the 2nd optional argument. if not set, uses SCRIPT_DIR
 
 if [[ ! -e ${COLLECTION_DIR} ]]; then
     echo ${COLLECTION_DIR} does not exist
@@ -39,16 +39,26 @@ fi
 SNAPSHOT_NAME=`date +"%Y%m%d_%H:%M:%S"`
 SNAPSHOT_DIR=${COLLECTION_DIR}/${SNAPSHOT_NAME}
 
-echo "Attempting to run python script to collect configuration from devices"
-python3 $SCRIPT_DIR/config_collector.py --inventory $INVENTORY --username $COLLECT_USER --password $COLLECT_PASSWORD --collection_dir $COLLECTION_DIR --snapshot_name $SNAPSHOT_NAME --max-threads 60
+echo "Collecting configuration from devices"
+python ${SCRIPT_DIR}/config_collector.py \
+    --inventory ${INVENTORY} \
+    --username ${COLLECT_USER} \
+    --password ${COLLECT_PASSWORD} \
+    --collection_dir ${COLLECTION_DIR} \
+    --snapshot_name ${SNAPSHOT_NAME} \
+    --max-threads 60
 echo "Configuration collection script run complete"
+
 echo "Cleaning up timestamps that lead to spurious config differences"
 grep -rle '^!Running configuration last done at: ' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(!Running configuration last done at: ).*$/\1REMOVED/g'
 grep -rle '^!Time: ' ${SNAPSHOT_DIR} | xargs sed -i 's/^!Time: .*$/!Time: REMOVED/g'
 grep -rle '^# Exported by' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(# Exported by [^ ]+ on ).*$/\1REMOVED/g'
+
 echo "Completed collecting and processing snapshot"
 
-BFE_NETWORK=${BFE_NETWORK:="MY_NETWORK"}
 echo "Uploading configuration to Batfish Enterprise"
-python3 $SCRIPT_DIR/bfe_upload_snapshot.py --snapshot $SNAPSHOT_DIR --network $BFE_NETWORK
+BFE_NETWORK=${BFE_NETWORK:="MY_NETWORK"}
+python ${SCRIPT_DIR}/bfe_upload_snapshot.py \
+    --snapshot ${SNAPSHOT_DIR} \
+    --network ${BFE_NETWORK}
 echo "Snapshot uploaded to Batfish Enterprise"
