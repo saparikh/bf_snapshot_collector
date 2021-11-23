@@ -23,22 +23,22 @@ if __name__ == "__main__":
 
     bfe_network = args.network
 
-    # retrieve BFE related ENV vars from the .env file
-    config = dotenv_values(".env")
+    # retrieve BFE related ENV vars from the env file
+    config = dotenv_values("env")
 
     bfe_host = config.get('BFE_HOST', None)
     bfe_port = config.get('BFE_PORT', 443)
     bfe_access_token = config.get('BFE_ACCESS_TOKEN', None)
 
-    if bfe_host is None or bfe_access_token is None:
-        raise Exception("BFE_HOST or BFE_ACCESS_TOKEN values not stored in .env file")
-        exit()
+    if bfe_host is None:
+        raise Exception("BFE_HOST is not set in env file")
+    if bfe_access_token is None:
+        raise Exception("BFE_ACCESS_TOKEN is not set in env file")
 
     try:
         bf = Session(host=bfe_host, port=bfe_port, access_token=bfe_access_token)
     except Exception as e:
-        print(f"Unable to connect to Batfish Enterprise server. Exception {e}")
-        exit()
+        raise Exception(f"Unable to connect to Batfish Enterprise server. Exception {e}")
 
     bf.set_network(bfe_network)
     print(f"Initializing snapshot in {snapshot_path}")
