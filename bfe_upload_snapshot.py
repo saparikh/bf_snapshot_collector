@@ -19,7 +19,7 @@ if __name__ == "__main__":
     parser = configargparse.ArgParser()
     parser.add_argument("--snapshot",
                         help="Absolute path to snapshot directory or zip file", required=True)
-    parser.add_argument("--network", help="name of the network to init snapshots in", default="MY_NETWORK")
+    parser.add_argument("--network", help="name of the network to init snapshots in", required=True)
 
     args = parser.parse_args()
     snapshot_path = Path(args.snapshot)
@@ -44,9 +44,6 @@ if __name__ == "__main__":
     if bfe_access_token is None:
         raise Exception("BFE_ACCESS_TOKEN is not set in env file")
 
-    try:
-        bf = Session(host=bfe_host, port=bfe_port, access_token=bfe_access_token)
-    except Exception as e:
-        raise Exception(f"Unable to connect to Batfish Enterprise server. Exception {e}")
+    bf = Session(host=bfe_host, port=bfe_port, access_token=bfe_access_token)
 
     main(args.network, args.snapshot)
