@@ -95,7 +95,6 @@ def get_config_cumulus(
     #  current setup just uses the device name for the logger name, so this works
     try:
         net_connect = RetryingNetConnect(device_session, device_name)
-        net_connect.enable()  # enter enable mode
     except Exception as e:
         status['message'] = f"Connection failed. Exception {e}"
         return status
