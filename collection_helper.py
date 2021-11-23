@@ -1,6 +1,8 @@
 import os
+import socket
 import sys
-from typing import List, Text, Dict
+from time import sleep
+from typing import Text, Dict
 import logging
 import yaml
 from netmiko import ConnectHandler
@@ -111,7 +113,6 @@ def get_netmiko_os(device_os: Text) -> Text:
     }
 
     return ansible_netmiko_map.get(device_os, None)
-
 
 
 def write_output_to_file(

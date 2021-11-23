@@ -10,6 +10,7 @@ from datetime import datetime
 from collection_helper import get_inventory, get_netmiko_os, write_output_to_file, \
     custom_logger, RetryingNetConnect
 
+
 def get_config(
         device_session: dict, device_name: str, device_command: str, output_path: str, logger,
 ) -> None:
@@ -26,6 +27,7 @@ def get_config(
     write_output_to_file(device_name, output_path, device_command, output)
 
     logger.info(f"Completed configuration collection for {device_name}")
+
 
 def get_config_eos(
         device_session: dict, device_name: str, device_command: str, output_path: str, logger,
@@ -44,6 +46,7 @@ def get_config_eos(
     write_output_to_file(device_name, output_path, device_command, output)
 
     logger.info(f"Completed configuration collection for {device_name}")
+
 
 def get_config_cumulus(
         device_session: dict, device_name: str, device_command: str, output_path: str, logger,
@@ -70,6 +73,7 @@ def get_config_cumulus(
 
     write_output_to_file(device_name, output_path, "cumulus_concatenated.txt", output)
     logger.info(f"Completed configuration collection for {device_name}")
+
 
 OS_COLLECTOR_FUNCTION = {
     "arista_eos": get_config_eos,
@@ -197,6 +201,7 @@ def main():
     print(f"###Completed collection: {end_time}")
     print(f"###Total time taken: {end_time - start_time}")
     return snapshot_name
+
 
 if __name__ == "__main__":
 

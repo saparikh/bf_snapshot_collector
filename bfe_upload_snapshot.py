@@ -1,9 +1,12 @@
-# required imports and default settings
-from pybfe.client.session import Session
-from pathlib import Path
 import configargparse
-from dotenv import dotenv_values
+import os
 
+from dotenv import dotenv_values
+from pathlib import Path
+from pybfe.client.session import Session
+
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+ENV_FILE = os.path.join(SCRIPT_DIR, "env")
 
 if __name__ == "__main__":
 
@@ -21,11 +24,12 @@ if __name__ == "__main__":
     elif not Path(f"{snapshot_path}/configs").exists():
         raise Exception(f"configs folder not found in {snapshot_path}")
 
+    # Read BFE related ENV vars from the env file
+    if not Path(ENV_FILE).exists():
+        raise Exception(f"Env file {ENV_FILE} doesn't exist")
+    config = dotenv_values(ENV_FILE)
+
     bfe_network = args.network
-
-    # retrieve BFE related ENV vars from the env file
-    config = dotenv_values("env")
-
     bfe_host = config.get('BFE_HOST', None)
     bfe_port = config.get('BFE_PORT', 443)
     bfe_access_token = config.get('BFE_ACCESS_TOKEN', None)
