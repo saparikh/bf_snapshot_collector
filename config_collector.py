@@ -42,6 +42,7 @@ def get_config(
 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = COLLECT_STATUS.PASS
+    status['message'] = "Collection succesful"
     return status
 
 
@@ -76,6 +77,7 @@ def get_config_eos(
 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = COLLECT_STATUS.PASS
+    status['message'] = "Collection succesful"
     return status
 
 def get_config_cumulus(
@@ -110,7 +112,7 @@ def get_config_cumulus(
     for cmd in cmd_list:
         try:
             # Get the running config on the device
-            logger.info(f"Running {device_command} on {device_name}")
+            logger.info(f"Running {cmd} on {device_name}")
             output += net_connect.run_command(cmd, cmd_timer)
             output += "\n\n"
         except Exception as e:
@@ -121,6 +123,7 @@ def get_config_cumulus(
 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = COLLECT_STATUS.PASS
+    status['message'] = "Collection succesful"
     return status
 
 
@@ -207,7 +210,7 @@ def main():
             # by default use the device name specified in inventory
             _host = device_name
             # override it with the IP address if specified in the inventory
-            if device_vars.get("ansible_host", None) is not None:
+            if device_vars is not None and device_vars.get("ansible_host", None) is not None:
                 _host = device_vars.get("ansible_host")
                 logger.info(f"Using IP {_host} to connect to device {device_name}")
 
