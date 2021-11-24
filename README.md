@@ -32,6 +32,9 @@ pip install -r requirements.txt
 ```
 
 2) Copy `example_env` to `env` and edit with correct user credentials and Batfish Enterprise installation
+   - You do not need to store the access credentials in the `env` file. You can just setup environment variables, 
+     `COLLECT_USER` and `COLLECT_PASSWORD`
+   - Solutions such as Hashicorp Vault and Ansible Vault can also be used to securely store the credentials.
 
 3) Create an inventory file for your devices
 
