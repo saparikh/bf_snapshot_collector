@@ -36,6 +36,7 @@ class RetryingNetConnect(object):
         except Exception as exc:
             self._logger.error(f"Connection to {self._device_name} failed: {exc}")
             raise Exception
+        self._logger.info(f"Netmiko prompt: {self._net_connect.base_prompt}")
 
     def run_command(self, cmd: str, cmd_timer: int, pattern=None):
         try:
