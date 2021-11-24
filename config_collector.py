@@ -97,24 +97,25 @@ def get_config_cumulus(device_session: dict, device_name: str, device_command: s
         status['message'] = f"Connection failed. Exception {e}"
         return status
 
-    cmd_list = [
-        "cat /etc/hostname",
-        "cat /etc/network/interfaces",
-        "cat /etc/cumulus/ports.conf",
-        "cat /etc/frr/frr.conf",
-    ]
-
-    # Get the running config on the device
     output = ""
-    for cmd in cmd_list:
-        try:
-            # Get the running config on the device
-            logger.info(f"Running {cmd} on {device_name}")
-            output += net_connect.run_command(cmd, cmd_timer)
-            output += "\n\n"
-        except Exception as e:
-            status['message'] = f"Config retrieval failed. Exception {e}"
-            return status
+    try:
+        logger.info(f"Running 'cat /etc/hostname' on {device_name}")
+        output += net_connect.run_command("cat /etc/hostname", cmd_timer)
+
+        logger.info(f"Running 'cat /etc/network/interfaces' on {device_name}")
+        output += "# This file describes the network interfaces"
+        output += net_connect.run_command("cat /etc/network/interfaces", cmd_timer)
+
+        logger.info(f"Running 'cat /etc/cumulus/ports.conf' on {device_name}")
+        output += "# ports.conf --"
+        output += net_connect.run_command("cat /etc/cumulus/ports.conf", cmd_timer)
+
+        logger.info(f"Running 'cat /etc/frr/frr.conf' on {device_name}")
+        output += "frr version"
+        output += net_connect.run_command("cat /etc/frr/frr.conf", cmd_timer)
+    except Exception as e:
+        status['message'] = f"Config retrieval failed. Exception {e}"
+        return status
 
     write_output_to_file(device_name, output_path, "cumulus_concatenated.txt", output)
 
