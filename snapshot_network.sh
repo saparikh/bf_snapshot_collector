@@ -50,12 +50,11 @@ python ${SCRIPT_DIR}/config_collector.py \
     --max-threads 60
 echo "Configuration collection script run complete"
 
-echo "Cleaning up timestamps that lead to spurious config differences"
-grep -rle '^!Running configuration last done at: ' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(!Running configuration last done at: ).*$/\1REMOVED/g'
-grep -rle '^!Time: ' ${SNAPSHOT_DIR} | xargs sed -i 's/^!Time: .*$/!Time: REMOVED/g'
-grep -rle '^# Exported by' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(# Exported by [^ ]+ on ).*$/\1REMOVED/g'
+#echo "Cleaning up timestamps that lead to spurious config differences"
+#grep -rle '^!Running configuration last done at: ' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(!Running configuration last done at: ).*$/\1REMOVED/g'
+#grep -rle '^!Time: ' ${SNAPSHOT_DIR} | xargs sed -i 's/^!Time: .*$/!Time: REMOVED/g'
+#grep -rle '^# Exported by' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(# Exported by [^ ]+ on ).*$/\1REMOVED/g'
 
-echo "Completed collecting and processing snapshot"
 
 echo "Uploading configuration to Batfish Enterprise"
 BFE_NETWORK=${BFE_NETWORK:="MY_NETWORK"}
