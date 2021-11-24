@@ -11,9 +11,7 @@ from collection_helper import (get_inventory, write_output_to_file,
                                custom_logger, RetryingNetConnect, CollectionStatus, AnsibleOsToNetmikoOs)
 
 
-def get_config(
-        device_session: dict, device_name: str, device_command: str, output_path: str, logger,
-) -> Dict:
+def get_config(device_session: dict, device_name: str, device_command: str, output_path: str, logger) -> Dict:
     """
     Default config collector. Works for Cisco and Juniper devices.
     """
@@ -47,9 +45,7 @@ def get_config(
     return status
 
 
-def get_config_eos(
-        device_session: dict, device_name: str, device_command: str, output_path: str, logger,
-) -> Dict:
+def get_config_eos(device_session: dict, device_name: str, device_command: str, output_path: str, logger) -> Dict:
     cmd_timer = 240
     logger.info(f"Trying to connect to {device_name}")
     status = {

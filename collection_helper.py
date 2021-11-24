@@ -43,7 +43,7 @@ class RetryingNetConnect(object):
             _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True,
                                                      expect_string=pattern)
         except socket.error as exc:
-            self._logger.error(f"Command {cmd} to {self._device_name} failed: {exc}")
+            self._logger.error(f"Socket error for {cmd} to {self._device_name} failed: {exc}")
             # re-establish a new SSH session for other commands
             try:
                 self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
@@ -106,9 +106,7 @@ def get_inventory(inventory_file: Text) -> Dict:
     return inventory['all']['children']
 
 
-def write_output_to_file(
-        device_name: Text, output_path: Text, cmd: Text, cmd_output: Text,
-):
+def write_output_to_file(device_name: Text, output_path: Text, cmd: Text, cmd_output: Text):
     """
     Save show commands output to it's file
     """
