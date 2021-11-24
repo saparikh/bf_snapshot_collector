@@ -27,51 +27,52 @@ AnsibleOsToNetmikoOs = {
 
 class RetryingNetConnect(object):
 
-    def __init__(self, device_session, logger_name):
+    def __init__(self, device_name: str, device_session: Dict, logger_name: str):
+        self._device_name = device_name
         self._device_session = device_session
         self._logger = logging.getLogger(logger_name)
         try:
             self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
         except Exception as exc:
-            self._logger.error(f"Exception: {exc}")
+            self._logger.error(f"Connection to {self._device_name} failed: {exc}")
             raise Exception
 
-    def run_command(self, cmd, cmd_timer, pattern=None):
+    def run_command(self, cmd: str, cmd_timer: int, pattern=None):
         try:
             self._logger.info(f"Using {pattern} as expect_string")
             _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True,
                                                      expect_string=pattern)
         except socket.error as exc:
-            self._logger.error(f"Command {cmd} failed: {exc}")
+            self._logger.error(f"Command {cmd} to {self._device_name} failed: {exc}")
             # re-establish a new SSH session for other commands
             try:
                 self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
             except Exception as exc:
-                self._logger.error(f"Could not reconnect to device: {exc}")
+                self._logger.error(f"Could not reconnect to {self._device_name} : {exc}")
                 raise Exception
             else:
                 try:
                     self._logger.error("Connection re-established, re-trying previous command")
                     _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True)
                 except Exception as exc:
-                    self._logger.error(f"Command {cmd} failed: {exc}")
+                    self._logger.error(f"Command {cmd} to {self._device_name} failed: {exc}")
                     sleep(60)
                     return None
                 else:
                     return _output
         except Exception as exc:
-            self._logger.error(f"Command {cmd} failed: {exc}")
+            self._logger.error(f"Command {cmd} to {self._device_name} failed: {exc}")
             sleep(60)
             pass
         else:
-            self._logger.debug(f"Command output: {_output}")
+            self._logger.debug(f"Output of {cmd} to {self._device_name}: {_output}")
             return _output
 
     def enable(self):
         try:
             self._net_connect.enable()
         except Exception as exc:
-            self._logger.error(f"Failed to enter enable mode: {exc}")
+            self._logger.error(f"Failed to enter enable mode at {self._device_name} : {exc}")
             pass
 
 

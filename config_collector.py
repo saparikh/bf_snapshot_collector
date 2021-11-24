@@ -27,7 +27,7 @@ def get_config(
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
     try:
-        net_connect = RetryingNetConnect(device_session, device_name)
+        net_connect = RetryingNetConnect(device_name, device_session, device_name)
     except Exception as e:
         status['message'] = f"Connection failed. Exception {e}"
         return status
@@ -60,7 +60,7 @@ def get_config_eos(
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
     try:
-        net_connect = RetryingNetConnect(device_session, device_name)
+        net_connect = RetryingNetConnect(device_name, device_session, device_name)
         net_connect.enable()  # enter enable mode
     except Exception as e:
         status['message'] = f"Connection failed. Exception {e}"
@@ -81,9 +81,7 @@ def get_config_eos(
     return status
 
 
-def get_config_cumulus(
-        device_session: dict, device_name: str, device_command: str, output_path: str, logger,
-) -> Dict:
+def get_config_cumulus(device_session: dict, device_name: str, output_path: str, logger) -> Dict:
     cmd_timer = 240
     logger.info(f"Trying to connect to {device_name}")
     status = {
@@ -94,7 +92,7 @@ def get_config_cumulus(
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
     try:
-        net_connect = RetryingNetConnect(device_session, device_name)
+        net_connect = RetryingNetConnect(device_name, device_session, device_name)
     except Exception as e:
         status['message'] = f"Connection failed. Exception {e}"
         return status
