@@ -14,17 +14,6 @@ class CollectionStatus(Enum):
     FAIL = 2
 
 
-AnsibleOsToNetmikoOs = {
-    "arista.eos.eos": "arista_eos",
-    "cisco.asa.asa": "cisco_asa",
-    "cisco.iosxr.iosxr": "cisco_xr",
-    "cisco.nxos.nxos": "cisco_nxos",
-    "cisco.ios.ios": "cisco_ios",
-    "juniper.junos.junos": "juniper_junos",
-    "cumulus": "linux",
-}
-
-
 class RetryingNetConnect(object):
 
     def __init__(self, device_session, logger_name):
@@ -33,44 +22,34 @@ class RetryingNetConnect(object):
         try:
             self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
         except Exception as exc:
-            self._logger.error(f"Skipped data collection, could not connect")
             self._logger.error(f"Exception: {exc}")
             raise Exception
 
     def run_command(self, cmd, cmd_timer, pattern=None):
         try:
-            if pattern is None:
-                self._logger.info("No pattern set to use as expect_string")
-                _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True)
-            else:
-                self._logger.info(f"Using {pattern} as expect_string")
-                _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True,
-                                                         expect_string=pattern)
+            self._logger.info(f"Using {pattern} as expect_string")
+            _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True,
+                                                     expect_string=pattern)
         except socket.error as exc:
-            self._logger.error(f"Socket error: {exc}\n")
-            self._logger.error(f"Command {cmd} failed, skipping it")
-            self._logger.error("Trying to reconnect to allow other commands to run")
-            # re-establish a new SSH session
+            self._logger.error(f"Command {cmd} failed: {exc}")
+            # re-establish a new SSH session for other commands
             try:
                 self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
             except Exception as exc:
-                self._logger.error(f"Cannot continue data collection for this device, could not reconnect")
-                self._logger.error(f"Exception: {exc}")
+                self._logger.error(f"Could not reconnect to device: {exc}")
                 raise Exception
             else:
                 try:
                     self._logger.error("Connection re-established, re-trying previous command")
                     _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True)
                 except Exception as exc:
-                    self._logger.error(f"Command {cmd} failed")
-                    self._logger.error(f"Exception: {exc}")
+                    self._logger.error(f"Command {cmd} failed: {exc}")
                     sleep(60)
                     return None
                 else:
                     return _output
         except Exception as exc:
-            self._logger.error(f"Command {cmd} failed")
-            self._logger.error(f"Exception: {exc}")
+            self._logger.error(f"Command {cmd} failed: {exc}")
             sleep(60)
             pass
         else:
@@ -81,8 +60,7 @@ class RetryingNetConnect(object):
         try:
             self._net_connect.enable()
         except Exception as exc:
-            self._logger.error(f"Failed to enter enable mode")
-            self._logger.error(f"Exception: {exc}")
+            self._logger.error(f"Failed to enter enable mode: {exc}")
             pass
 
 
@@ -110,11 +88,8 @@ def get_inventory(inventory_file: Text) -> Dict:
     with open(inventory_file) as f:
         inventory = yaml.safe_load(f)
 
-    if inventory.get("all") is None:
-        raise Exception(f"{inventory_file} exists, but is not properly formatted")
-
-    if inventory['all'].get('children') is None:
-        raise Exception(f"{inventory_file} exists, but is not properly formatted")
+    if inventory.get("all") is None or inventory['all'].get('children') is None:
+        raise Exception(f"{inventory_file} is not properly formatted")
 
     return inventory['all']['children']
 
