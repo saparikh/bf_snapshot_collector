@@ -29,7 +29,7 @@ if [[ -z "${COLLECT_PASSWORD}" ]]; then
 fi
 
 INVENTORY=$1  # Inventory file MUST be the first argument
-COLLECTION_DIR="${2:-${SCRIPT_DIR}}"  # Collection directory is the 2nd optional argument. if not set, uses SCRIPT_DIR
+COLLECTION_DIR="${2:-$( pwd )}"  # Collection directory is the 2nd optional argument. by default, use working directory
 BFE_NETWORK="${BFE_NETWORK:-MY_NETWORK}"  # use network name if set in env; else 'MY_NETWORK'
 
 if [[ ! -e ${COLLECTION_DIR} ]]; then
