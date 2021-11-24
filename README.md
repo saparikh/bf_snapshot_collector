@@ -24,7 +24,7 @@ All devices in the inventory MUST be accessible with the SAME username and passw
 
 For Cumulus, make sure the user has password-less sudo access
 
-### Collector setup
+## Collector setup
 
 1) Create a python (3.7+) virtual environment and install dependencies
 ```
@@ -33,7 +33,9 @@ pip install -r requirements.txt
 
 2) Copy `example_env` to `env` and edit with correct user credentials and Batfish Enterprise installation
 
-### Taking network snapshots
+3) Create an inventory file for your devices
+
+## Taking network snapshots
 
 You can collect network snapshots and upload to Batfish Enterprise via this command:
 
