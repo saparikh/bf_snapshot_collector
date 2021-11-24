@@ -81,7 +81,7 @@ def get_config_eos(
     return status
 
 
-def get_config_cumulus(device_session: dict, device_name: str, output_path: str, logger) -> Dict:
+def get_config_cumulus(device_session: dict, device_name: str, device_command: str, output_path: str, logger) -> Dict:
     cmd_timer = 240
     logger.info(f"Trying to connect to {device_name}")
     status = {
