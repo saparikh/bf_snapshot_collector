@@ -1,5 +1,5 @@
 import os
-import sys
+from typing import Dict
 
 import configargparse
 import logging
@@ -8,55 +8,96 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
 from collection_helper import get_inventory, get_netmiko_os, write_output_to_file, \
-    custom_logger, RetryingNetConnect
+    custom_logger, RetryingNetConnect, COLLECT_STATUS
 
 
 def get_config(
         device_session: dict, device_name: str, device_command: str, output_path: str, logger,
-) -> None:
+) -> Dict:
 
     cmd_timer = 240
     logger.info(f"Trying to connect to {device_name}")
+    status = {
+        "name": device_name,
+        "status": COLLECT_STATUS.FAIL,
+        "message": "",
+    }
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
-    net_connect = RetryingNetConnect(device_session, device_name)
+    try:
+        net_connect = RetryingNetConnect(device_session, device_name)
+    except Exception as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        return status
 
-    # Get the running config on the device
-    logger.info(f"Running {device_command} on {device_name}")
-    output = net_connect.run_command(device_command, cmd_timer)
-    write_output_to_file(device_name, output_path, device_command, output)
+    try:
+        # Get the running config on the device
+        logger.info(f"Running {device_command} on {device_name}")
+        output = net_connect.run_command(device_command, cmd_timer)
+        write_output_to_file(device_name, output_path, device_command, output)
+    except Exception as e:
+        status['message'] = f"Config retrieval failed. Exception {e}"
+        return status
 
     logger.info(f"Completed configuration collection for {device_name}")
+    status['status'] = COLLECT_STATUS.PASS
+    status['message'] = "Collection succesful"
+    return status
 
 
 def get_config_eos(
         device_session: dict, device_name: str, device_command: str, output_path: str, logger,
-) -> None:
+) -> Dict:
 
     cmd_timer = 240
     logger.info(f"Trying to connect to {device_name}")
+    status = {
+        "name": device_name,
+        "status": COLLECT_STATUS.FAIL,
+        "message": "",
+    }
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
-    net_connect = RetryingNetConnect(device_session, device_name)
-    net_connect.enable()  # enter enable mode
+    try:
+        net_connect = RetryingNetConnect(device_session, device_name)
+        net_connect.enable()  # enter enable mode
+    except Exception as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        return status
 
-    # Get the running config on the device
-    logger.info(f"Running {device_command} on {device_name}")
-    output = net_connect.run_command(device_command, cmd_timer)
-    write_output_to_file(device_name, output_path, device_command, output)
+    try:
+        # Get the running config on the device
+        logger.info(f"Running {device_command} on {device_name}")
+        output = net_connect.run_command(device_command, cmd_timer)
+        write_output_to_file(device_name, output_path, device_command, output)
+    except Exception as e:
+        status['message'] = f"Config retrieval failed. Exception {e}"
+        return status
 
     logger.info(f"Completed configuration collection for {device_name}")
-
+    status['status'] = COLLECT_STATUS.PASS
+    status['message'] = "Collection succesful"
+    return status
 
 def get_config_cumulus(
         device_session: dict, device_name: str, device_command: str, output_path: str, logger,
-) -> None:
+) -> Dict:
 
     cmd_timer = 240
     logger.info(f"Trying to connect to {device_name}")
+    status = {
+        "name": device_name,
+        "status": COLLECT_STATUS.FAIL,
+        "message": "",
+    }
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
-    net_connect = RetryingNetConnect(device_session, device_name)
+    try:
+        net_connect = RetryingNetConnect(device_session, device_name)
+    except Exception as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        return status
+
     cmd_list = [
         "cat /etc/hostname",
         "cat /etc/network/interfaces",
@@ -67,12 +108,21 @@ def get_config_cumulus(
     # Get the running config on the device
     output = ""
     for cmd in cmd_list:
-        logger.info(f"Running {cmd} on {device_name}")
-        output += net_connect.run_command(cmd, cmd_timer)
-        output += "\n\n"
+        try:
+            # Get the running config on the device
+            logger.info(f"Running {cmd} on {device_name}")
+            output += net_connect.run_command(cmd, cmd_timer)
+            output += "\n\n"
+        except Exception as e:
+            status['message'] = f"Config retrieval failed. Exception {e}"
+            return status
 
     write_output_to_file(device_name, output_path, "cumulus_concatenated.txt", output)
+
     logger.info(f"Completed configuration collection for {device_name}")
+    status['status'] = COLLECT_STATUS.PASS
+    status['message'] = "Collection succesful"
+    return status
 
 
 OS_COLLECTOR_FUNCTION = {
@@ -158,7 +208,7 @@ def main():
             # by default use the device name specified in inventory
             _host = device_name
             # override it with the IP address if specified in the inventory
-            if device_vars.get("ansible_host", None) is not None:
+            if device_vars is not None and device_vars.get("ansible_host", None) is not None:
                 _host = device_vars.get("ansible_host")
                 logger.info(f"Using IP {_host} to connect to device {device_name}")
 
@@ -185,17 +235,10 @@ def main():
                                      output_path=output_path, logger=logger)
                 future_list.append(future)
 
-    count = 0
     for future in as_completed(future_list):
         # todo: revisit exception handling
-        try:
-            # todo: return more information from function to help error detection
-            data = future.result()
-        except Exception as exc:
-            print(f"Exception generated: \n {exc}")
-
-        print(f"Finished device number {count}")
-        count += 1
+        status = future.result()
+        print(f"Data collection for {status['name']} has {status['status']} with message {status['message']}\n")
 
     end_time = datetime.now()
     print(f"###Completed collection: {end_time}")
@@ -206,4 +249,3 @@ def main():
 if __name__ == "__main__":
 
     snapshot_name = main()
-    sys.exit(snapshot_name)
