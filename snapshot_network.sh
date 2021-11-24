@@ -48,7 +48,6 @@ python ${SCRIPT_DIR}/config_collector.py \
     --collection-dir ${COLLECTION_DIR} \
     --snapshot-name ${SNAPSHOT_NAME} \
     --max-threads 60
-echo "Configuration collection script run complete"
 
 #echo "Cleaning up timestamps that lead to spurious config differences"
 #grep -rle '^!Running configuration last done at: ' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(!Running configuration last done at: ).*$/\1REMOVED/g'
@@ -61,4 +60,3 @@ BFE_NETWORK=${BFE_NETWORK:="MY_NETWORK"}
 python ${SCRIPT_DIR}/bfe_upload_snapshot.py \
     --snapshot ${SNAPSHOT_DIR} \
     --network ${BFE_NETWORK}
-echo "Snapshot uploaded to Batfish Enterprise"

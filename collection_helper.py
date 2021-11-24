@@ -76,7 +76,7 @@ class RetryingNetConnect(object):
             pass
 
 
-def custom_logger(logger_name, log_file, console_log_level=logging.DEBUG):
+def custom_logger(logger_name, log_file, console_log_level):
     """
     Method to return a custom logger with the given name and level
     """
@@ -99,7 +99,7 @@ def custom_logger(logger_name, log_file, console_log_level=logging.DEBUG):
     # Creating and adding the file handler
     file_handler = logging.FileHandler(log_file, mode='a')
     file_handler.setFormatter(log_format)
-    file_handler.setFormatter(logging.INFO)  # always want detail
+    file_handler.setLevel(logging.INFO)  # always want detail in log files
     logger.addHandler(file_handler)
 
     return logger
