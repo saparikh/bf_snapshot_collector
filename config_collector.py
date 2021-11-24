@@ -196,10 +196,11 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
                                      device_command=cfg_cmd, output_path=output_path, logger=logger)
                 future_list.append(future)
 
-    for future in as_completed(future_list):
-        # todo: revisit exception handling
-        status = future.result()
-        print(f"Data collection for {status['name']} has {status['status']} with message {status['message']}\n")
+    # TODO: revisit exception handling
+    failed_devices = [future.result()['name'] for future in as_completed(future_list) if
+                      future.result()['status'] != CollectionStatus.PASS]
+    if len(failed_devices) != 0:
+        print(f"Collection failed for {len(failed_devices)} devices: {failed_devices}")
 
 
 if __name__ == "__main__":
@@ -213,7 +214,7 @@ if __name__ == "__main__":
     parser.add_argument("--collection-dir", help="Directory for data collection", required=True)
     parser.add_argument("--snapshot-name", help="Name for the snapshot directory",
                         default=datetime.now().strftime("%Y%m%d_%H:%M:%S"))
-    parser.add_argument("--log-level", help="Log level", default="debug")
+    parser.add_argument("--log-level", help="Log level", default="warn")
 
     args = parser.parse_args()
 
