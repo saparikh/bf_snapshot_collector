@@ -14,6 +14,17 @@ class CollectionStatus(Enum):
     FAIL = 2
 
 
+AnsibleOsToNetmikoOs = {
+    "arista.eos.eos": "arista_eos",
+    "cisco.asa.asa": "cisco_asa",
+    "cisco.iosxr.iosxr": "cisco_xr",
+    "cisco.nxos.nxos": "cisco_nxos",
+    "cisco.ios.ios": "cisco_ios",
+    "juniper.junos.junos": "juniper_junos",
+    "cumulus": "linux",
+}
+
+
 class RetryingNetConnect(object):
 
     def __init__(self, device_session, logger_name):
