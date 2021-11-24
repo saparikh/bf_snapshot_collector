@@ -8,7 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
 from collection_helper import (get_inventory, write_output_to_file,
-    custom_logger, RetryingNetConnect, CollectionStatus, AnsibleOsToNetmikoOs)
+                               custom_logger, RetryingNetConnect, CollectionStatus, AnsibleOsToNetmikoOs)
 
 
 def get_config(
@@ -152,9 +152,6 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
     pool = ThreadPoolExecutor(max_threads)
     future_list = []
 
-    start_time = datetime.now()
-    print(f"###Starting collection: {start_time}")
-
     for grp, grp_data in inventory.items():
         device_os = AnsibleOsToNetmikoOs.get(grp_data['vars'].get('ansible_network_os'), None)
         if device_os is None:
@@ -204,9 +201,6 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
         status = future.result()
         print(f"Data collection for {status['name']} has {status['status']} with message {status['message']}\n")
 
-    end_time = datetime.now()
-    print(f"###Completely collection. Total time taken: {end_time - start_time}")
-
 
 if __name__ == "__main__":
 
@@ -216,11 +210,16 @@ if __name__ == "__main__":
     parser.add_argument("--password", help="password to access devices", required=True)
     parser.add_argument("--max-threads", help="Max threads for parallel collection. Default = 10, Maximum is 100",
                         type=int, default=10)
-    parser.add_argument("--collection_dir", help="Directory for data collection", required=True)
-    parser.add_argument("--snapshot_name", help="Name for the snapshot directory",
+    parser.add_argument("--collection-dir", help="Directory for data collection", required=True)
+    parser.add_argument("--snapshot-name", help="Name for the snapshot directory",
                         default=datetime.now().strftime("%Y%m%d_%H:%M:%S"))
+    parser.add_argument("--log-level", help="Log level", default="debug")
 
     args = parser.parse_args()
+
+    log_level = logging._nameToLevel.get(args.log_level.upper())
+    if not log_level:
+        raise Exception("Invalid log level: {}".format(args.log_level))
 
     # check if inventory file exists
     if not Path(args.inventory).exists():
@@ -231,4 +230,4 @@ if __name__ == "__main__":
         raise Exception(f"{args.collection_dir} does not exist. Please create the directory and re-run the script")
 
     main(inventory, args.max_threads, args.username, args.password, args.snapshot_name, args.collection_dir,
-         logging.INFO)
+         log_level)

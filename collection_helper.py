@@ -86,13 +86,13 @@ class RetryingNetConnect(object):
             pass
 
 
-def custom_logger(logger_name, log_file, level=logging.INFO):
+def custom_logger(logger_name, log_file, level=logging.DEBUG):
     """
     Method to return a custom logger with the given name and level
     """
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
-    format_string = '%(asctime)s %(message)s'
+    format_string = '%(levelname)s:%(asctime)s %(message)s'
     datefmt_string = '%m/%d/%Y %I:%M:%S %p'
     log_format = logging.Formatter(fmt=format_string, datefmt=datefmt_string)
     # Creating and adding the console handler
