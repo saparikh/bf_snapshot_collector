@@ -8,9 +8,22 @@ import yaml
 from netmiko import ConnectHandler
 from enum import Enum
 
-class COLLECT_STATUS(Enum):
+
+class CollectionStatus(Enum):
     PASS = 1
     FAIL = 2
+
+
+AnsibleOsToNetmikoOs = {
+    "arista.eos.eos": "arista_eos",
+    "cisco.asa.asa": "cisco_asa",
+    "cisco.iosxr.iosxr": "cisco_xr",
+    "cisco.nxos.nxos": "cisco_nxos",
+    "cisco.ios.ios": "cisco_ios",
+    "juniper.junos.junos": "juniper_junos",
+    "cumulus": "linux",
+}
+
 
 class RetryingNetConnect(object):
 
@@ -80,7 +93,7 @@ def custom_logger(logger_name, log_file, level=logging.INFO):
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
     format_string = '%(asctime)s %(message)s'
-    datefmt_string ='%m/%d/%Y %I:%M:%S %p'
+    datefmt_string = '%m/%d/%Y %I:%M:%S %p'
     log_format = logging.Formatter(fmt=format_string, datefmt=datefmt_string)
     # Creating and adding the console handler
     console_handler = logging.StreamHandler(sys.stdout)
@@ -94,7 +107,6 @@ def custom_logger(logger_name, log_file, level=logging.INFO):
 
 
 def get_inventory(inventory_file: Text) -> Dict:
-
     with open(inventory_file) as f:
         inventory = yaml.safe_load(f)
 
@@ -105,24 +117,6 @@ def get_inventory(inventory_file: Text) -> Dict:
         raise Exception(f"{inventory_file} exists, but is not properly formatted")
 
     return inventory['all']['children']
-
-
-def get_netmiko_os(device_os: Text) -> Text:
-    """
-    netmiko device os mapping
-    """
-
-    ansible_netmiko_map = {
-        "arista.eos.eos": "arista_eos",
-        "cisco.asa.asa": "cisco_asa",
-        "cisco.iosxr.iosxr": "cisco_xr",
-        "cisco.nxos.nxos": "cisco_nxos",
-        "cisco.ios.ios": "cisco_ios",
-        "juniper.junos.junos": "juniper_junos",
-        "cumulus": "linux",
-    }
-
-    return ansible_netmiko_map.get(device_os, None)
 
 
 def write_output_to_file(
