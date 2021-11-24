@@ -76,23 +76,32 @@ class RetryingNetConnect(object):
             pass
 
 
-def custom_logger(logger_name, log_file, level=logging.DEBUG):
+def custom_logger(logger_name, log_file, console_log_level=logging.DEBUG):
     """
     Method to return a custom logger with the given name and level
     """
     logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
+
+    # to use different levels per handler the logger's level should be lower than either
+    # we set it to DEBUG, the lowest value
+    logger.setLevel(logging.DEBUG)
+
     format_string = '%(levelname)s:%(asctime)s %(message)s'
     datefmt_string = '%m/%d/%Y %I:%M:%S %p'
     log_format = logging.Formatter(fmt=format_string, datefmt=datefmt_string)
+
     # Creating and adding the console handler
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(log_format)
+    console_handler.setLevel(console_log_level)
     logger.addHandler(console_handler)
+
     # Creating and adding the file handler
     file_handler = logging.FileHandler(log_file, mode='a')
     file_handler.setFormatter(log_format)
+    file_handler.setFormatter(logging.INFO)  # always want detail
     logger.addHandler(file_handler)
+
     return logger
 
 
