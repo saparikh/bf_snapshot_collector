@@ -117,7 +117,7 @@ def get_config_cumulus(device_session: dict, device_name: str, device_command: s
         status['message'] = f"Config retrieval failed. Exception {e}"
         return status
 
-    write_output_to_file(device_name, output_path, "cumulus_concatenated.txt", output)
+    write_output_to_file(device_name, output_path, "cumulus_concatenated", output)
 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
