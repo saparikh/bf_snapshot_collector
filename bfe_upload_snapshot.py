@@ -38,9 +38,9 @@ if __name__ == "__main__":
     bf_network = settings.get('BF_NETWORK', None)
 
     if bf_host is None:
-        raise Exception("BF_HOST is not set in env file")
+        raise Exception(f"BF_HOST is not set in {args.settings}")
     if bf_network is None:
-        raise Exception("BF_NETWORK is not set in env file")
+        raise Exception(f"BF_NETWORK is not set in {args.settings}")
 
     bf = Session(host=bf_host, port=bf_port, access_token=args.access_token)
 

@@ -5,17 +5,17 @@ set -eou pipefail
 SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 BASE_DIR="$(dirname "${SCRIPT_DIR}")"
 
-if [[ -z ${BF_COLLECTOR_USER} ]]; then
+if [[ -z ${BF_COLLECTOR_USER+x} ]]; then
     echo "Environment variable BF_COLLECTOR_USER is not set"
     exit 1
 fi
 
-if [[ -z ${BF_COLLECTOR_PASSWORD} ]]; then
+if [[ -z ${BF_COLLECTOR_PASSWORD+x} ]]; then
     echo "Environment variable BF_COLLECTOR_PASSWORD is not set"
     exit 1
 fi
 
-if [[ -z ${BF_ACCESS_TOKEN} ]]; then
+if [[ -z ${BF_ACCESS_TOKEN+x} ]]; then
     echo "Environment variable BFE_ACCESS_TOKEN is not set"
     exit 1
 fi
