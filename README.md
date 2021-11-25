@@ -47,6 +47,8 @@ BF_ACCESS_TOKEN=<bf-access-token> \
   bash snapshot_network.sh <inventory file> <batfish settings file> [<collection directory>]
 ```
 
-The third argument to the script is optional and specifies where the output of the collector should be stored. The default value is the current working directory. 
+In the first three lines of this command, we are passing in username and password to access the device as environment variables. They can be omitted if the environment variables are set via other means (e.g., the export command).
+
+The third argument to the `snapshot_network.sh` script is optional and specifies where the output of the collector should be stored. The default value is the current working directory. 
 
 The snapshots are given a name based on collection time, such as `20211123_19:58:34`. Collected snapshots are uploaded to Batfish Enterprise but also left on local drive in the collection directory under a folder with the snapshot name. The logs will be under the folder `logs/20211123_19:58:34` in the collection directory. 
