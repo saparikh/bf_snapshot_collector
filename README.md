@@ -31,21 +31,22 @@ For Cumulus, make sure the user has can read all of the necessary files, such as
 pip install -r requirements.txt
 ```
 
-2) Copy `example_env` to `env` and edit with correct user credentials and Batfish Enterprise installation
-   - You do not need to store the access credentials in the `env` file. You can just setup environment variables, 
-     `COLLECT_USER` and `COLLECT_PASSWORD`
-   - Solutions such as Hashicorp Vault and Ansible Vault can also be used to securely store the credentials.
+2) Create an inventory file for your devices
 
-3) Create an inventory file for your devices
+3) Create a file with settings to connect to Batfish. See `example_bf_settings.env` for an example.
+
 
 ## Taking network snapshots
 
 You can collect network snapshots and upload to Batfish Enterprise via this command:
 
 ```
-bash snapshot_network.sh <inventory file> [<collection directory>]
+BF_COLLECTOR_USER=<device-access-user> \
+BF_COLLECTOR_PASSWORD=<device-access-passowrd> \ 
+BF_ACCESS_TOKEN=<bf-access-token> \ 
+  bash snapshot_network.sh <inventory file> <batfish settings file> [<collection directory>]
 ```
 
-The second argument to the script is optional and specifies where the output of the collector should be stored. The default value is the current working directory. 
+The third argument to the script is optional and specifies where the output of the collector should be stored. The default value is the current working directory. 
 
 The snapshots are given a name based on collection time, such as `20211123_19:58:34`. Collected snapshots are uploaded to Batfish Enterprise but also left on local drive in the collection directory under a folder with the snapshot name. The logs will be under the folder `logs/20211123_19:58:34` in the collection directory. 

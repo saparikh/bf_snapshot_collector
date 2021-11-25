@@ -202,12 +202,14 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
         print(f"Collection failed for {len(failed_devices)} devices: {failed_devices}")
 
 
-if __name__ == "__main__":
+COLLECT_USER="<username to log into devices>"
+COLLECT_PASSWORD="<password to log into devices>"
 
+if __name__ == "__main__":
     parser = configargparse.ArgParser()
     parser.add_argument("--inventory", help="Absolute path to inventory file to use", required=True)
-    parser.add_argument("--username", help="username to access devices", required=True)
-    parser.add_argument("--password", help="password to access devices", required=True)
+    parser.add_argument("--username", help="Username to access devices", required=True, env_var="BF_COLLECTOR_USER")
+    parser.add_argument("--password", help="Password to access devices", required=True, env_var="BF_COLLECTOR_PASSWORD")
     parser.add_argument("--max-threads", help="Max threads for parallel collection. Default = 10, Maximum is 100",
                         type=int, default=10)
     parser.add_argument("--collection-dir", help="Directory for data collection", required=True)
