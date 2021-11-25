@@ -46,4 +46,4 @@ if __name__ == "__main__":
 
     bf = Session(host=bfe_host, port=bfe_port, access_token=bfe_access_token)
 
-    main(args.network, args.snapshot)
+    main(bf, args.network, args.snapshot)
