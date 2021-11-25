@@ -100,17 +100,17 @@ def get_config_cumulus(device_session: dict, device_name: str, device_command: s
         output += "\n"
 
         logger.info(f"Running 'cat /etc/network/interfaces' on {device_name}")
-        output += "# This file describes the network interfaces"
+        output += "# This file describes the network interfaces\n"
         output += net_connect.run_command("cat /etc/network/interfaces", cmd_timer)
         output += "\n"
 
         logger.info(f"Running 'cat /etc/cumulus/ports.conf' on {device_name}")
-        output += "# ports.conf --"
+        output += "# ports.conf --\n"
         output += net_connect.run_command("cat /etc/cumulus/ports.conf", cmd_timer)
         output += "\n"
 
         logger.info(f"Running 'cat /etc/frr/frr.conf' on {device_name}")
-        output += "frr version"
+        output += "frr version\n"
         output += net_connect.run_command("cat /etc/frr/frr.conf", cmd_timer)
         output += "\n"
     except Exception as e:
