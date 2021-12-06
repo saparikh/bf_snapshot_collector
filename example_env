@@ -1,6 +1,0 @@
-COLLECT_USER="<username to log into devices>"
-COLLECT_PASSWORD="<password to log into devices>"
-BFE_HOST="<name or ip address for server running Batfish Enterprise>"
-BFE_PORT="<port on which BFE server is listening. can omit if using default port 443>"
-BFE_ACCESS_TOKEN="<your bfe acecss token>"
-BFE_NETWORK="<name of network to send to Batfish Enterprise>"
