@@ -55,7 +55,7 @@ python ${SCRIPT_DIR}/config_collector.py \
 #grep -rle '^# Exported by' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(# Exported by [^ ]+ on ).*$/\1REMOVED/g'
 
 
-echo "Uploading configuration to Batfish Enterprise"
+echo "Uploading snapshot ${SNAPSHOT_NAME} to Batfish Enterprise"
 BFE_NETWORK=${BFE_NETWORK:="MY_NETWORK"}
 python ${SCRIPT_DIR}/bfe_upload_snapshot.py \
     --snapshot ${SNAPSHOT_DIR} \
