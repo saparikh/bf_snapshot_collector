@@ -2,7 +2,7 @@ import os
 import socket
 import sys
 from time import sleep
-from typing import Text, Dict
+from typing import Text, Dict, List
 import logging
 import yaml
 from netmiko import ConnectHandler, NetmikoTimeoutException
@@ -21,7 +21,7 @@ class CollectionStatus(Enum):
 
 AnsibleOsToNetmikoOs = {
     "arista.eos.eos": "arista_eos",
-    "a10": "a10",
+    "acos": "a10",
     "check_point.gaia.checkpoint": "checkpoint_gaia",
     "cisco.asa.asa": "cisco_asa",
     "cisco.iosxr.iosxr": "cisco_xr",

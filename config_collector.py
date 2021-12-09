@@ -118,7 +118,7 @@ def get_config_cumulus(device_session: dict, device_name: str, device_command: s
         status['message'] = f"Config retrieval failed. Exception {e}"
         return status
 
-    write_output_to_file(device_name, output_path, "cumulus_concatenated", output)
+    write_output_to_file(device_name, output_path, "cumulus_concatenated.txt", output)
 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
@@ -201,7 +201,7 @@ def get_config_a10(
                 return status
 
         logger.debug(f"Command output: {output}")
-        write_output_to_file(device_name, output_path, device_command, output, "!BATFISH_FORMAT: a10_acos")
+        write_output_to_file(device_name, output_path, cmd, output, "!BATFISH_FORMAT: a10_acos")
 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
@@ -255,7 +255,7 @@ def get_config_checkpoint(device_session: dict, device_name: str, device_command
     try:
         # Get the running config on the device
         logger.info(f"Running {device_command} on {device_name}")
-        output = net_connect.run_command(device_command, cmd_timer)
+        output = net_connect.run_command(device_command, cmd_timer, pattern=prompt_pattern)
         write_output_to_file(device_name, output_path, device_command, output, "#BATFISH_FORMAT: check_point_gateway")
 
     except Exception as e:
