@@ -349,9 +349,6 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
         print(f"Collection failed for {len(failed_devices)} devices: {failed_devices}")
 
 
-COLLECT_USER="<username to log into devices>"
-COLLECT_PASSWORD="<password to log into devices>"
-
 if __name__ == "__main__":
     parser = configargparse.ArgParser()
     parser.add_argument("--inventory", help="Absolute path to inventory file to use", required=True)
