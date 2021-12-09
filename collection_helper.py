@@ -5,7 +5,7 @@ from time import sleep
 from typing import Text, Dict
 import logging
 import yaml
-from netmiko import ConnectHandler
+from netmiko import ConnectHandler, NetmikoTimeoutException
 from enum import Enum
 
 
@@ -33,8 +33,20 @@ class RetryingNetConnect(object):
         self._logger = logging.getLogger(logger_name)
         try:
             self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
-        except Exception as exc:
-            self._logger.error(f"Connection to {self._device_name} failed: {exc}")
+        except NetmikoTimeoutException as exc:
+            if "Pattern not detected" in str(exc):
+                self._logger.error(f"Device didn't return prompt in 20 seconds, re-trying connection in 60 seconds")
+                sleep(60)  # wait 60 seconds before retrying
+                try:
+                    self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
+                except Exception as exc:
+                    self._logger.exception(f"2nd attempt at connecting failed, skipping device.")
+                    raise Exception
+            else:
+                self._logger.exception(f"Skipped data collection, could not connect")
+                raise Exception
+        except Exception:
+            self._logger.exception(f"Connection to {self._device_name} failed")
             raise Exception
         self._logger.info(f"Netmiko prompt: {self._net_connect.base_prompt}")
 
@@ -43,27 +55,28 @@ class RetryingNetConnect(object):
             self._logger.info(f"Using {pattern} as expect_string")
             _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True,
                                                      expect_string=pattern)
-        except socket.error as exc:
-            self._logger.error(f"Socket error for {cmd} to {self._device_name} failed: {exc}")
-            # re-establish a new SSH session for other commands
+        except socket.error:
+            self._logger.exception(f"Socket error for {cmd} to {self._device_name}")
+            # wait 60 seconds and then try to re-establish a new SSH session
+            sleep(60)
             try:
                 self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
-            except Exception as exc:
-                self._logger.error(f"Could not reconnect to {self._device_name} : {exc}")
+            except Exception:
+                self._logger.exception(f"Could not reconnect to {self._device_name}")
                 raise Exception
             else:
                 try:
-                    self._logger.error("Connection re-established, re-trying previous command")
+                    self._logger.info("Connection re-established, re-trying previous command")
                     _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True)
                 except Exception as exc:
-                    self._logger.error(f"Command {cmd} to {self._device_name} failed: {exc}")
-                    sleep(60)
+                    self._logger.exception(f"Command {cmd} to {self._device_name} failed")
+                    sleep(60)  # cannot remember why this sleep is needed
                     return None
                 else:
                     return _output
-        except Exception as exc:
-            self._logger.error(f"Command {cmd} to {self._device_name} failed: {exc}")
-            sleep(60)
+        except Exception:
+            self._logger.exception(f"Command {cmd} to {self._device_name} failed")
+            sleep(60)  # cannot remember why this sleep is needed
             pass
         else:
             self._logger.debug(f"Output of {cmd} to {self._device_name}: {_output}")
@@ -72,9 +85,9 @@ class RetryingNetConnect(object):
     def enable(self):
         try:
             self._net_connect.enable()
-        except Exception as exc:
-            self._logger.error(f"Failed to enter enable mode at {self._device_name} : {exc}")
-            pass
+        except Exception:
+            self._logger.exception(f"Failed to enter enable mode at {self._device_name}")
+            pass  # still want to try to run commands outside of enable mode
 
 
 def custom_logger(logger_name, log_file, console_log_level):
