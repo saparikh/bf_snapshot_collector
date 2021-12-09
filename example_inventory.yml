@@ -36,3 +36,13 @@ all:
         ansible_network_os: juniper.junos.junos
       hosts:
         junos01: null
+    checkpointgaia:
+      vars:
+        ansible_network_os: check_point.gaia.checkpoint
+      hosts:
+        cpgw01: null
+    a10:
+      vars:
+        ansible_network_os: acos
+      hosts:
+        acos01: null

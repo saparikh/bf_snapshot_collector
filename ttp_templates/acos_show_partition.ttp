@@ -1,0 +1,22 @@
+# ACOS V4, V5
+<group>
+Total Number of active partitions: {{ total | DIGIT }}
+Partition Name   Id     L3V/SP     Parent L3V           App Type   Admin Count {{ ignore }}
+------------------------------------------------------------------------------ {{ ignore }}
+<group name="partitions*" method="table">
+{{ partition_name | WORD }} {{ id | DIGIT }} {{ type | WORD }} {{ parent_L3V | WORD }} {{ app_type | WORD }} {{ admin_count | DIGIT }}
+</group>
+</group>
+# ACOS V2
+<group>
+Total Number of partitions configured:  {{ total | DIGIT }}
+Max L3V partitions allowed:             {{ max_l3v_allowed | DIGIT }}
+Max RBA partitions allowed:             {{ max_rba_allowed | DIGIT }}
+Total partitions allowed:               {{ total_partitions_allowed | DIGIT }}
+Partition Name   L3V  Index  Max. Aflex  Admin Count {{ ignore }}
+---------------------------------------------------- {{ ignore }}
+<group name="partitions*" method="table">
+{{ partition_name | WORD }} {{ l3v | WORD }} {{ index | DIGIT }} {{ max_aflex | DIGIT }} {{ admin_count | DIGIT }}
+{{ partition_name | WORD }} {{ l3v | WORD }} {{ index | DIGIT }}  * {{ max_aflex | DIGIT }} {{ admin_count | DIGIT }}
+</group>
+</group>

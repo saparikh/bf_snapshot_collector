@@ -1,5 +1,6 @@
 import os
 from typing import Dict
+import re
 
 import configargparse
 import logging
@@ -7,8 +8,8 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
-from collection_helper import (get_inventory, write_output_to_file,
-                               custom_logger, RetryingNetConnect, CollectionStatus, AnsibleOsToNetmikoOs)
+from collection_helper import (get_inventory, write_output_to_file, custom_logger, RetryingNetConnect,
+                               CollectionStatus, AnsibleOsToNetmikoOs, a10_parse_version)
 
 
 def get_config(device_session: dict, device_name: str, device_command: str, output_path: str, logger) -> Dict:
@@ -125,8 +126,152 @@ def get_config_cumulus(device_session: dict, device_name: str, device_command: s
     return status
 
 
+def get_config_a10(
+        device_session: dict, device_name: str, device_command: str, output_path: str, logger) -> Dict:
+    """
+    Checkpoint Gateway config collector.
+    """
+    cmd_timer = 240
+    logger.info(f"Trying to connect to {device_name}")
+    status = {
+        "name": device_name,
+        "status": CollectionStatus.FAIL,
+        "message": "",
+    }
+    # todo: figure out to get logger name from the logger object that is passed in.
+    #  current setup just uses the device name for the logger name, so this works
+    try:
+        net_connect = RetryingNetConnect(device_name, device_session, device_name)
+    except Exception as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        return status
+
+    cmd_dict = {
+        "v2_config": ["show running-config all-partitions"],
+        "v4p_config": ["show running-config partition-config all"],
+        "unknown_config": ["show running-config with-default"],
+    }
+
+    A10_PROMPT_REGEX_TRAILER = r"(-\w+)?(.*#|>)\s*$"
+
+    # set default partition list to empty
+    partitions = []
+
+    # set the prompt pattern for Netmiko to use
+    prompt_pattern = fr"({device_name}){A10_PROMPT_REGEX_TRAILER}"
+    logger.info(f"Using {prompt_pattern} to find device prompt")
+
+    # get the ACOS version to determine which command to run to get device configuration with partitions
+    cmd = "show version"
+    logger.info(f"Running {cmd} on {device_name}")
+    try:
+        output = net_connect.run_command(cmd, cmd_timer, pattern=prompt_pattern)
+    except Exception as e:
+        logger.exception(f"Failed to get output of {cmd}, going to sleep 10 minutes and retry")
+        sleep(600)
+        # reconnect to the device and run the command again
+        try:
+            net_connect = RetryingNetConnect(device_name, device_session, device_name)
+            output = net_connect.run_command(cmd, cmd_timer, pattern=prompt_pattern)
+            logger.debug(f"Command output: {output}")
+            write_output_to_file(device_name, output_path, device_command, output)
+        except Exception as e:
+            logger.exception(f"Retry for show version failed")
+            status['message'] = f"Connection failed. Exception {e}"
+            return status
+    else:
+        logger.debug(f"Command output: {output}")
+        write_output_to_file(device_name, output_path, device_command, output)
+        # will return dictionary key to use to select configuration command
+
+    cfg_version = a10_parse_version(output)
+
+    # get the configuration commands
+    logger.info(f"Getting configuration for {device_name}")
+    cmd_list = cmd_dict[f"{cfg_version}_config"]
+    for cmd in cmd_list:
+        logger.info(f"Running {cmd} on {device_name}")
+        output = net_connect.run_command(cmd, cmd_timer, pattern=prompt_pattern)
+        # trying to catch scenario in which netmiko doesn't return complete config
+        if "end" not in output.strip().splitlines()[-1]:
+            # certain versions have end as the 2nd to last line and the below line is the last line
+            if "Current config commit point for partition 0 is 0 & config mode is classical-mode" not in output.strip().splitlines()[-1]:
+                logger.error(f"Didn't retrieve full config file")
+                status['message'] = "Collection failed, only got partial A10 configuration"
+                return status
+
+        logger.debug(f"Command output: {output}")
+        write_output_to_file(device_name, output_path, device_command, output, "!BATFISH_FORMAT: a10_acos")
+
+    logger.info(f"Completed configuration collection for {device_name}")
+    status['status'] = CollectionStatus.PASS
+    status['message'] = "Collection succesful"
+    return status
+
+def get_config_checkpoint(device_session: dict, device_name: str, device_command: str, output_path: str, logger) -> Dict:
+    """
+    Checkpoint Gateway config collector.
+    """
+    cmd_timer = 240
+    logger.info(f"Trying to connect to {device_name}")
+    status = {
+        "name": device_name,
+        "status": CollectionStatus.FAIL,
+        "message": "",
+    }
+    # todo: figure out to get logger name from the logger object that is passed in.
+    #  current setup just uses the device name for the logger name, so this works
+    try:
+        net_connect = RetryingNetConnect(device_name, device_session, device_name)
+    except Exception as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        return status
+
+    # set the correct prompt for netmiko to use
+    # prompts can be of the following formats with optional trailing space at the end:
+    #
+    # name>
+    # [Global] name-ch01-01>
+    # [Global] name-ch02-01 >
+    # name:TACP-0>
+    # name#
+    # [Global] name-ch01-01#
+    # [Global] name-ch02-01 #
+    # name:TACP-0#
+    #
+    CP_PROMPT_EXTRACT = f"(.*){device_name}" + r"(?P<trailer>.*)"
+    pattern = re.compile(CP_PROMPT_EXTRACT, re.IGNORECASE)
+    m = re.match(pattern, net_connect._base_prompt)
+
+    prompt_pattern = None
+    if m is not None:
+        if m.group("trailer") is not None:
+            prompt_pattern = f"{device_name}{m.group('trailer')}[>|#]\s*$"
+        else:
+            prompt_pattern = f"{device_name}[>|#]\s*$"
+
+    logger.info(f"Using {prompt_pattern} to find device prompt")
+
+    try:
+        # Get the running config on the device
+        logger.info(f"Running {device_command} on {device_name}")
+        output = net_connect.run_command(device_command, cmd_timer)
+        write_output_to_file(device_name, output_path, device_command, output, "#BATFISH_FORMAT: check_point_gateway")
+
+    except Exception as e:
+        status['message'] = f"Config retrieval failed. Exception {e}"
+        return status
+
+    logger.info(f"Completed configuration collection for {device_name}")
+    status['status'] = CollectionStatus.PASS
+    status['message'] = "Collection succesful"
+    return status
+
+
 OS_COLLECTOR_FUNCTION = {
     "arista_eos": get_config_eos,
+    "a10": get_config_a10,
+    "checkpoint_gaia": get_config_checkpoint,
     "cisco_asa": get_config,
     "cisco_ios": get_config,
     "cisco_nxos": get_config,
@@ -137,6 +282,8 @@ OS_COLLECTOR_FUNCTION = {
 
 OS_CONFIG_COMMAND = {
     "arista_eos": "show running-config",
+    "a10": "ignore",
+    "checkpoint_gaia": "show configuration",
     "cisco_asa": "show running-config",
     "cisco_ios": "show running-config",
     "cisco_nxos": "show running-config all",
