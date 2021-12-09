@@ -2,12 +2,17 @@ import os
 import socket
 import sys
 from time import sleep
-from typing import Text, Dict
+from typing import Text, Dict, List
 import logging
 import yaml
 from netmiko import ConnectHandler, NetmikoTimeoutException
 from enum import Enum
+from ttp import ttp
 
+SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
+
+A10_PARTITION_TTP_TEMPLATE = f"{SCRIPT_DIR}/ttp_templates/acos_show_partition.ttp"
+A10_VERSION_TTP_TEMPLATE = f"{SCRIPT_DIR}/ttp_templates/acos_show_version.ttp"
 
 class CollectionStatus(Enum):
     PASS = 1
@@ -16,12 +21,14 @@ class CollectionStatus(Enum):
 
 AnsibleOsToNetmikoOs = {
     "arista.eos.eos": "arista_eos",
+    "acos": "a10",
+    "check_point.gaia.checkpoint": "checkpoint_gaia",
     "cisco.asa.asa": "cisco_asa",
     "cisco.iosxr.iosxr": "cisco_xr",
     "cisco.nxos.nxos": "cisco_nxos",
     "cisco.ios.ios": "cisco_ios",
-    "juniper.junos.junos": "juniper_junos",
     "cumulus": "linux",
+    "juniper.junos.junos": "juniper_junos",
 }
 
 
@@ -48,6 +55,7 @@ class RetryingNetConnect(object):
         except Exception:
             self._logger.exception(f"Connection to {self._device_name} failed")
             raise Exception
+        self._base_prompt = self._net_connect.base_prompt
         self._logger.info(f"Netmiko prompt: {self._net_connect.base_prompt}")
 
     def run_command(self, cmd: str, cmd_timer: int, pattern=None):
@@ -129,7 +137,7 @@ def get_inventory(inventory_file: Text) -> Dict:
     return inventory['all']['children']
 
 
-def write_output_to_file(device_name: Text, output_path: Text, cmd: Text, cmd_output: Text):
+def write_output_to_file(device_name: Text, output_path: Text, cmd: Text, cmd_output: Text, prepend_text=None):
     """
     Save show commands output to it's file
     """
@@ -138,4 +146,77 @@ def write_output_to_file(device_name: Text, output_path: Text, cmd: Text, cmd_ou
 
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "w") as f:
+        if prepend_text is not None:
+            f.write(prepend_text)
+            f.write("\n")
         f.write(cmd_output)
+
+def a10_parse_version(input: Text) -> str:
+
+    template = A10_VERSION_TTP_TEMPLATE
+
+    parser = ttp()
+    # Note:
+    #   - must add macros first, then vars and then you can add the template
+    #   - if you add templates individually, you will get multiple entries in
+    #       parser.result(). That is why it is easier to concatenate the
+    #       individual template files and then just add them as a single template
+    #       this way you get a results object for the entire input
+    #       as opposed to one object per template file
+    #
+    # to get additional debug information from ttp
+    # import logging
+    # logging.basicConfig(level=logging.DEBUG)
+    #
+
+    if template is None:
+        return []
+
+    parser.add_template(template)
+    parser.add_input(input)
+    parser.parse()
+    res = parser.result()[0][0]
+
+    if len(res) == 0:
+        return "unknown"
+
+    version = res[0].get('acos_version', None)
+    if version is None:
+        return "unknown"
+    elif re.match("^2\..*$", version):
+        return "v2"
+    else:
+        return "v4p"
+
+
+def a10_parse_partition(input: Text) -> List:
+
+    template = A10_PARTITION_TTP_TEMPLATE
+
+    parser = ttp()
+    # Note:
+    #   - must add macros first, then vars and then you can add the template
+    #   - if you add templates individually, you will get multiple entries in
+    #       parser.result(). That is why it is easier to concatenate the
+    #       individual template files and then just add them as a single template
+    #       this way you get a results object for the entire input
+    #       as opposed to one object per template file
+    #
+    # to get additional debug information from ttp
+    # import logging
+    # logging.basicConfig(level=logging.DEBUG)
+    #
+
+    if template is None:
+        return []
+
+    parser.add_template(template)
+    parser.add_input(input)
+    parser.parse()
+    res = parser.result()[0][0]
+    if len(res) == 0:
+        return []
+    else:
+        return res[0].get('partitions', [])
+
+

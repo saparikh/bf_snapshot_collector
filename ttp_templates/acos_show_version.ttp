@@ -1,0 +1,16 @@
+# ACOS V2
+<group>
+      64-bit Advanced Core OS (ACOS) version {{ acos_version }}, build {{ build | ORPHRASE }}
+      Serial Number: {{ serial_number }}
+      Firmware version: {{ firmware_version }}
+      aFleX version: {{ aflex_version }}
+      aXAPI version: {{ axapi_version }}
+</group>
+# ACOS V4, V5
+<group>
+          64-bit Advanced Core OS (ACOS) version {{ acos_version }}, build {{ build | ORPHRASE }}
+          Serial Number: {{ serial_number }}
+          Firmware version: {{ firmware_version }}
+          aFleX version: {{ aflex_version }}
+          aXAPI version: {{ axapi_version }}
+</group>
