@@ -129,7 +129,7 @@ def get_config_cumulus(device_session: dict, device_name: str, device_command: s
 def get_config_a10(
         device_session: dict, device_name: str, device_command: str, output_path: str, logger) -> Dict:
     """
-    Checkpoint Gateway config collector.
+    A10 Loadbalancer config collector.
     """
     cmd_timer = 240
     logger.info(f"Trying to connect to {device_name}")
