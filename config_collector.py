@@ -201,6 +201,9 @@ def get_config_a10(
         logger.info(f"Running {cmd} on {device_name}")
         output = net_connect.run_command(cmd, cmd_timer, pattern=prompt_pattern)
         # trying to catch scenario in which netmiko doesn't return complete config
+        if output is None:
+            logger.error(f"Didn't retrieve any part of the config")
+            return status
         if "end" not in output.strip().splitlines()[-1]:
             # certain versions have end as the 2nd to last line and the below line is the last line
             if "Current config commit point for partition 0 is 0 & config mode is classical-mode" not in output.strip().splitlines()[-1]:

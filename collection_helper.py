@@ -79,13 +79,11 @@ class RetryingNetConnect(object):
                     _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True)
                 except Exception as exc:
                     self._logger.exception(f"Command {cmd} to {self._device_name} failed")
-                    sleep(60)  # cannot remember why this sleep is needed
                     return None
                 else:
                     return _output
         except Exception:
             self._logger.exception(f"Command {cmd} to {self._device_name} failed")
-            sleep(60)  # cannot remember why this sleep is needed
             pass
         else:
             self._logger.debug(f"Output of {cmd} to {self._device_name}: {_output}")
