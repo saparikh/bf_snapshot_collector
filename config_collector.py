@@ -43,7 +43,7 @@ def get_config(device_session: dict, device_name: str, device_command: str, outp
 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
-    status['message'] = "Collection succesful"
+    status['message'] = "Collection successful"
     return status
 
 
@@ -75,7 +75,7 @@ def get_config_eos(device_session: dict, device_name: str, device_command: str, 
 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
-    status['message'] = "Collection succesful"
+    status['message'] = "Collection successful"
     return status
 
 
@@ -185,11 +185,18 @@ def get_config_a10(
         write_output_to_file(device_name, output_path, cmd, output)
         # will return dictionary key to use to select configuration command
 
-    cfg_version = a10_parse_version(output)
+    if output is None:
+        logger.error(f"Failed to get output for {cmd}")
+        cfg_version = "unknown"
+    else:
+        cfg_version = a10_parse_version(output)
 
     # get the configuration commands
     logger.info(f"Getting configuration for {device_name}")
-    cmd_list = cmd_dict[f"{cfg_version}_config"]
+    cmd_list = cmd_dict.get(f"{cfg_version}_config", None)
+    if cmd_list is None:
+        logger.error(f"No configuration command mapped for version {cfg_version}")
+        return status
     for cmd in cmd_list:
         logger.info(f"Running {cmd} on {device_name}")
         output = net_connect.run_command(cmd, cmd_timer, pattern=prompt_pattern)
@@ -206,7 +213,7 @@ def get_config_a10(
 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
-    status['message'] = "Collection succesful"
+    status['message'] = "Collection successful"
     return status
 
 def get_config_checkpoint(device_session: dict, device_name: str, device_command: str, output_path: str, logger) -> Dict:
@@ -265,7 +272,7 @@ def get_config_checkpoint(device_session: dict, device_name: str, device_command
 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
-    status['message'] = "Collection succesful"
+    status['message'] = "Collection successful"
     return status
 
 
