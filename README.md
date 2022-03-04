@@ -22,7 +22,7 @@ Your inventory may have a mix of devices which are resolvable via DNS and device
 All devices in the inventory MUST be accessible with the SAME username and password. That user MUST either be put into 
 `enable` mode or be granted correct privilege level to retrieve running configuration without being in `enable` mode.
 
-For Cumulus, make sure the user has can read all of the necessary files, such as `/etc/frr/frr.conf`, without using `sudo`
+For Cumulus, make sure the user can read all the necessary files, such as `/etc/frr/frr.conf`, without using `sudo`
 
 ## Collector setup
 

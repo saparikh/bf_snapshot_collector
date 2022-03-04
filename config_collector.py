@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Dict
 import re
 
@@ -174,14 +175,14 @@ def get_config_a10(
             net_connect = RetryingNetConnect(device_name, device_session, device_name)
             output = net_connect.run_command(cmd, cmd_timer, pattern=prompt_pattern)
             logger.debug(f"Command output: {output}")
-            write_output_to_file(device_name, output_path, device_command, output)
+            write_output_to_file(device_name, output_path, cmd, output)
         except Exception as e:
             logger.exception(f"Retry for show version failed")
             status['message'] = f"Connection failed. Exception {e}"
             return status
     else:
         logger.debug(f"Command output: {output}")
-        write_output_to_file(device_name, output_path, device_command, output)
+        write_output_to_file(device_name, output_path, cmd, output)
         # will return dictionary key to use to select configuration command
 
     cfg_version = a10_parse_version(output)
@@ -298,6 +299,9 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
     pool = ThreadPoolExecutor(max_threads)
     future_list = []
 
+    start_time = time.time()
+    print(f"Starting snapshot collection {time.strftime('%Y-%m-%d %H:%M %Z', time.localtime(start_time))}")
+
     for grp, grp_data in inventory.items():
         device_os = AnsibleOsToNetmikoOs.get(grp_data['vars'].get('ansible_network_os'), None)
         if device_os is None:
@@ -311,7 +315,7 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
 
             logger = custom_logger(device_name, log_file, log_level)
             logger.info(f"Starting collection for {device_name}")
-            logger.info(f"Group {grp}, Group_data {grp_data}")
+            logger.info(f"Device vars are {device_vars}")
 
             # by default use the device name specified in inventory
             _host = device_name
@@ -345,9 +349,14 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
     # TODO: revisit exception handling
     failed_devices = [future.result()['name'] for future in as_completed(future_list) if
                       future.result()['status'] != CollectionStatus.PASS]
+
+    end_time = time.time()
+
     if len(failed_devices) != 0:
         print(f"Collection failed for {len(failed_devices)} devices: {failed_devices}")
 
+    print(f"Completed snapshot collection {time.strftime('%Y-%m-%d %H:%M %Z', time.localtime(end_time))}")
+    print(f"Total colletion time {end_time - start_time} seconds")
 
 if __name__ == "__main__":
     parser = configargparse.ArgParser()

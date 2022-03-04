@@ -8,6 +8,7 @@ import yaml
 from netmiko import ConnectHandler, NetmikoTimeoutException
 from enum import Enum
 from ttp import ttp
+import re
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
@@ -142,14 +143,17 @@ def write_output_to_file(device_name: Text, output_path: Text, cmd: Text, cmd_ou
     Save show commands output to it's file
     """
     file_name = cmd.replace(" ", "_")
-    file_path = output_path + "/" + device_name + "/" + file_name + ".txt"
+    file_path = f"{output_path}/{device_name}/{file_name}.txt"
 
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "w") as f:
         if prepend_text is not None:
             f.write(prepend_text)
             f.write("\n")
-        f.write(cmd_output)
+        if cmd_output is None:
+            f.write("Command output was None")
+        else:
+            f.write(cmd_output)
 
 def a10_parse_version(input: Text) -> str:
 
