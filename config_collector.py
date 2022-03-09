@@ -153,7 +153,7 @@ def get_config_a10(
         "unknown_config": ["show running-config with-default"],
     }
 
-    A10_PROMPT_REGEX_TRAILER = r"(-\w+)?(.*#|>)\s*$"
+    A10_PROMPT_REGEX_TRAILER = r"(-\w+)?(.*[#>])\s*$"
 
     # set default partition list to empty
     partitions = []
@@ -366,7 +366,7 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
         print(f"Collection failed for {len(failed_devices)} devices: {failed_devices}")
 
     print(f"Completed snapshot collection {time.strftime('%Y-%m-%d %H:%M %Z', time.localtime(end_time))}")
-    print(f"Total colletion time {end_time - start_time} seconds")
+    print(f"Total collection time {end_time - start_time} seconds")
 
 if __name__ == "__main__":
     parser = configargparse.ArgParser()

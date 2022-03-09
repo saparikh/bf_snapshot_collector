@@ -43,15 +43,15 @@ class RetryingNetConnect(object):
             self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
         except NetmikoTimeoutException as exc:
             if "Pattern not detected" in str(exc):
-                self._logger.error(f"Device didn't return prompt in 20 seconds, re-trying connection in 60 seconds")
+                self._logger.error(f"Device {self._device_name} didn't return prompt in 20 seconds, re-trying connection in 60 seconds")
                 sleep(60)  # wait 60 seconds before retrying
                 try:
                     self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
                 except Exception as exc:
-                    self._logger.exception(f"2nd attempt at connecting failed, skipping device.")
+                    self._logger.exception(f"2nd attempt at connecting failed, skipping device {self._device_name}.")
                     raise Exception
             else:
-                self._logger.exception(f"Skipped data collection, could not connect")
+                self._logger.exception(f"Skipped data collection for {self._device_name}, could not connect")
                 raise Exception
         except Exception:
             self._logger.exception(f"Connection to {self._device_name} failed")
@@ -76,7 +76,8 @@ class RetryingNetConnect(object):
             else:
                 try:
                     self._logger.info("Connection re-established, re-trying previous command")
-                    _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True)
+                    _output = self._net_connect.send_command(cmd, read_timeout=cmd_timer, strip_command=True,
+                                                             expect_string=pattern)
                 except Exception as exc:
                     self._logger.exception(f"Command {cmd} to {self._device_name} failed")
                     return None
