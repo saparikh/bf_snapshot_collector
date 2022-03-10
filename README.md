@@ -10,6 +10,8 @@ the format required by Batfish and Batfish Enterprise
 - Cumulus Linux
 - Arista EOS
 - Juniper JunOS
+- Checkpoint Gateway
+- A10 Loadbalancer (Ver 2.x and Ver 4.x)
 
 ### Device inventory
 The collection script expects a valid Ansible inventory file. There is an `example_inventory.yml` file to 
