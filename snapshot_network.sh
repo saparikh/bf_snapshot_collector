@@ -16,12 +16,12 @@ if [[ -z ${BF_COLLECTOR_PASSWORD+x} ]]; then
 fi
 
 if [[ -z ${2+x} ]]; then
-    echo "Usage: process_collection.sh <inventory file> <batfish settings file> <optional: collection directory>)"
+    echo "Usage: snapshot_network.sh <inventory file> <batfish settings file> <optional: collection directory>)"
     exit 1
 fi
 
 if ! [[ -z ${4+x} ]]; then
-    echo "Usage: process_collection.sh <inventory file> <batfish settings file> <optional: collection directory>)"
+    echo "Usage: snapshot_network.sh <inventory file> <batfish settings file> <optional: collection directory>)"
     exit 1
 fi
 
