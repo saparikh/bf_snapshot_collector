@@ -15,18 +15,13 @@ if [[ -z ${BF_COLLECTOR_PASSWORD+x} ]]; then
     exit 1
 fi
 
-if [[ -z ${BF_ACCESS_TOKEN+x} ]]; then
-    echo "Environment variable BF_ACCESS_TOKEN is not set"
-    exit 1
-fi
-
 if [[ -z ${2+x} ]]; then
-    echo "Usage: process_collection.sh <inventory file> <batfish settings file> <optional: collection directory>)"
+    echo "Usage: snapshot_network.sh <inventory file> <batfish settings file> <optional: collection directory>)"
     exit 1
 fi
 
 if ! [[ -z ${4+x} ]]; then
-    echo "Usage: process_collection.sh <inventory file> <batfish settings file> <optional: collection directory>)"
+    echo "Usage: snapshot_network.sh <inventory file> <batfish settings file> <optional: collection directory>)"
     exit 1
 fi
 
