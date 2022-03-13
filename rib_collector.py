@@ -172,7 +172,7 @@ def get_nxos_rib(device_session: dict, device_name: str, output_path: str, logge
                             bgp_neighbors = parsed_output
 
     end_time = time.time()
-    logger.info(f"Completed RIB collection for {device_name} in {start_time-end_time} seconds")
+    logger.info(f"Completed RIB collection for {device_name} in {end_time-start_time:.2f} seconds")
     if len(status['failed_commands']) == 0:
         status['status'] = CollectionStatus.PASS
         status['message'] = "Collection successful"
@@ -347,7 +347,7 @@ def get_xr_rib(device_session: dict, device_name: str, output_path: str, logger)
                             bgp_neighbors = parsed_output
 
     end_time = time.time()
-    logger.info(f"Completed RIB collection for {device_name} in {start_time-end_time} seconds")
+    logger.info(f"Completed RIB collection for {device_name} in {end_time-start_time:.2f} seconds")
     if len(status['failed_commands']) == 0:
         status['status'] = CollectionStatus.PASS
         status['message'] = "Collection successful"
