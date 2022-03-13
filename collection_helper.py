@@ -10,14 +10,20 @@ from enum import Enum
 from ttp import ttp
 import re
 
+from genie.conf.base import Device
+from genie.libs.parser.utils import get_parser
+from attrdict import AttrDict
+
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
 A10_PARTITION_TTP_TEMPLATE = f"{SCRIPT_DIR}/ttp_templates/acos_show_partition.ttp"
 A10_VERSION_TTP_TEMPLATE = f"{SCRIPT_DIR}/ttp_templates/acos_show_version.ttp"
 
+
 class CollectionStatus(Enum):
     PASS = 1
     FAIL = 2
+    PARTIAL = 3
 
 
 AnsibleOsToNetmikoOs = {
@@ -154,6 +160,7 @@ def write_output_to_file(device_name: Text, output_path: Text, cmd: Text, cmd_ou
         else:
             f.write(cmd_output)
 
+
 def a10_parse_version(input: Text) -> str:
 
     template = A10_VERSION_TTP_TEMPLATE
@@ -222,4 +229,83 @@ def a10_parse_partition(input: Text) -> List:
     else:
         return res[0].get('partitions', [])
 
+
+def parse_genie_file(device_name, file, command=None, os=None, logger=None):
+    """
+    Wrapper function around Cisco pyATS/Genie library to parse cli output into structured data. Allows you to pass in a file
+    that contains the cli output you want to parse
+    :param file: (String) Path to file containing CLI output from Cisco device
+    :param command: (String) CLI command that was used to generate the cli_output
+    :param os: (String) Operating system of the device for which cli_output was obtained.
+    :return: Dict object conforming to the defined genie parser schema.
+             https://pubhub.devnetcloud.com/media/pyats-packages/docs/genie/genie_libs/#/parsers/show%20version
+    """
+
+    f = open(file, 'r')
+    text = f.read()
+    f.close()
+    return parse_genie(device_name, text, command, os, logger)
+
+
+def parse_genie(device_name, cli_output, command=None, os=None, logger=None):
+    """
+    Uses the Cisco pyATS/Genie library to parse cli output into structured data.
+    :param cli_output: (String) CLI output from Cisco device
+    :param command: (String) CLI command that was used to generate the cli_output
+    :param os: (String) Operating system of the device for which cli_output was obtained.
+    :return: Dict object conforming to the defined genie parser schema.
+             https://pubhub.devnetcloud.com/media/pyats-packages/docs/genie/genie_libs/#/parsers/show%20version
+    """
+
+    # Input validation
+
+    # Is the OS provided by the user a supported OS by Genie?
+    # Supported Genie OSes: https://github.com/CiscoTestAutomation/genieparser/tree/master/src/genie/libs/parser
+    #
+    # SAMIR: Ignoring JUNOS for now, since there are not enough parsers for Junos commands in Genie
+    genie_supported_oses = ["ios", "iosxe", "iosxr", "nxos"]
+    if os.lower() not in genie_supported_oses:
+        logger.error(
+            "The network OS provided ({0}) to the genie_parse filter is not a supported OS in Genie.".format(
+                os
+            )
+        )
+
+    def _parse(device_name, raw_cli_output, cmd, nos, logger):
+        # Boilerplate code to get the parser functional
+        # tb = Testbed()
+        device = Device(device_name, os=nos)
+
+        device.custom.setdefault("abstraction", {})["order"] = ["os"]
+        device.cli = AttrDict({"execute": None})
+
+        # User input checking of the command provided. Does the command have a Genie parser?
+        try:
+            get_parser(cmd, device)
+        except Exception as e:
+            logger.error(
+                "genie_parse: {0} - Available parsers: {1}".format(e,
+                                                                   "https://pubhub.devnetcloud.com/media/pyats-packages/docs/genie/genie_libs/#/parsers")
+            )
+
+        try:
+            parsed_output = device.parse(cmd, output=raw_cli_output)
+            return parsed_output
+        except Exception as e:
+            logger.error(
+                "genie_parse: {0} - Failed to parse command output.".format(e)
+            )
+        # what is returned if the try fails?
+        # shouldn't there be a default value returned that you can check for?
+
+    # Try to parse the output
+    # If OS is IOS, ansible could have passed in IOS, but the Genie device-type is actually IOS-XE,
+    # so we will try to parse both.
+    if os == "ios":
+        try:
+            return _parse(device_name, cli_output, command, "ios", logger)
+        except Exception:
+            return _parse(device_name, cli_output, command, "iosxe", logger)
+    else:
+        return _parse(device_name, cli_output, command, os, logger)
 
