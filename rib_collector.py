@@ -63,7 +63,7 @@ def get_nxos_rib(device_session: dict, device_name: str, output_path: str, logge
     cmd = "show vrf all detail"
     logger.info(f"Running {cmd} on {device_name}")
     try:
-        output = net_connect.run_command(cmd, 120)
+        output = net_connect.run_command(cmd, cmd_timer)
     except Exception as e:
         status['message'] = f"Failed to get VRF list. Exception {e}"
         status['failed_commands'].append(cmd)
@@ -180,6 +180,7 @@ def get_nxos_rib(device_session: dict, device_name: str, output_path: str, logge
         status['status'] = CollectionStatus.PARTIAL
         status['message'] = "Collection partially successful"
 
+    net_connect.close()
     return status
 
 
@@ -237,7 +238,7 @@ def get_xr_rib(device_session: dict, device_name: str, output_path: str, logger)
     cmd = "show vrf all detail"
     logger.info(f"Running {cmd} on {device_name}")
     try:
-        output = net_connect.run_command(cmd, 120)
+        output = net_connect.run_command(cmd, cmd_timer)
     except Exception as e:
         status['message'] = f"Failed to get VRF list. Exception {e}"
         status['failed_commands'].append(cmd)
@@ -355,6 +356,7 @@ def get_xr_rib(device_session: dict, device_name: str, output_path: str, logger)
         status['status'] = CollectionStatus.PARTIAL
         status['message'] = "Collection partially successful"
 
+    net_connect.close()
     return status
 
 

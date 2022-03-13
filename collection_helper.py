@@ -59,6 +59,15 @@ class RetryingNetConnect(object):
             else:
                 self._logger.exception(f"Skipped data collection for {self._device_name}, could not connect")
                 raise Exception
+        except socket.error:
+            self._logger.exception(f"Socket error for {cmd} to {self._device_name}")
+            # wait 60 seconds and then try to re-establish a new SSH session
+            sleep(60)
+            try:
+                self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
+            except Exception:
+                self._logger.exception(f"Could not reconnect to {self._device_name}")
+                raise Exception
         except Exception:
             self._logger.exception(f"Connection to {self._device_name} failed")
             raise Exception
@@ -102,6 +111,9 @@ class RetryingNetConnect(object):
         except Exception:
             self._logger.exception(f"Failed to enter enable mode at {self._device_name}")
             pass  # still want to try to run commands outside of enable mode
+
+    def close(self):
+        self._net_connect.disconnect()
 
 
 def custom_logger(logger_name, log_file, console_log_level):
