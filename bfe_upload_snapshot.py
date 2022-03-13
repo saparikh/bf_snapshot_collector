@@ -43,7 +43,6 @@ if __name__ == "__main__":
     if bf_network is None:
         raise Exception(f"BF_NETWORK is not set in {args.settings}")
 
-    print(bf_enterprise)
     bf = BfeSession(host=bf_host, port=bfe_port, access_token=args.access_token) if bf_enterprise else BfSession(
         host=bf_host)
 
