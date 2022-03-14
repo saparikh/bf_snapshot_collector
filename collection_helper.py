@@ -155,6 +155,15 @@ def get_inventory(inventory_file: Text) -> Dict:
     return inventory['all']['children']
 
 
+def get_show_commands(commands_file: Text) -> Dict:
+    with open(commands_file) as f:
+        commands = yaml.safe_load(f)
+
+    if commands.get("all") is None:
+        raise Exception(f"{commands} is not properly formatted")
+
+    return commands['all']
+
 def write_output_to_file(device_name: Text, output_path: Text, cmd: Text, cmd_output: Text, prepend_text=None):
     """
     Save show commands output to it's file

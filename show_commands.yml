@@ -1,0 +1,143 @@
+all:
+  aristaeos:
+    topology:
+      - show lldp neighbors detail
+      - show cdp neighbors detail
+    version:
+      - show version
+    interface:
+      - show interface
+    routes_v4:
+      global:
+        - show ip route
+  ciscoios:
+    topology:
+      - show lldp neighbors detail
+      - show cdp neighbors detail
+    version:
+      - show version
+    interface:
+      - show interface
+      - show snmp mib ifmib ifindex
+    ospf_v2:
+      - show ip ospf neighbor
+    routes_v4:
+      global:
+        - show ip route
+  ciscoiosxr:
+    topology:
+      - show lldp neighbors detail
+      - show cdp neighbors detail
+    version:
+      - show version
+    interface:
+      - show interfaces
+      - show snmp interface
+    ospf_v2:
+      - show ospf
+      - show ospf vrf all
+      - show ospf neighbor
+    routes_v4:
+      global:
+        - show route summary
+        - show route summary
+      vrf:
+        - show route vrf all summary
+        - show route vrf all
+    bgp_v4:
+      global:
+        neighbors:
+          - show bgp all all neighbors
+        rib:
+          - show bgp ipv4 unicast
+          - show bgp vpnv4 unicast
+        neighbor_ribs:
+          - show bgp ipv4 all neighbors _neigh_ advertised-routes
+          - show bgp ipv4 all neighbors _neigh_ routes
+          - show bgp ipv4 all neighbors _neigh_ received routes
+      vrf:
+        neighbors:
+          - show bgp vrf all neighbors
+        rib:
+          - show bgp vrf all
+        neighbor_ribs:
+          - show bgp vrf _vrf_ ipv4 unicast neighbors _neigh_ advertised-routes
+          - show bgp vrf _vrf_ ipv4 unicast neighbors _neigh_ routes
+          - show bgp vrf _vrf_ ipv4 unicast neighbors _neigh_ received routes
+  cisconxos:
+    topology:
+      - show lldp neighbors detail
+      - show cdp neighbors detail
+    version:
+      - show version
+    interface:
+      - show interface
+      - show interface snmp-ifindex
+      - show ip interface brief vrf all
+    ospf_v2:
+      - show ip ospf neighbor
+    routes_v4:
+      global:
+        - show ip route vrf all
+    bgp_v4:
+      global:
+        summary:
+          - show bgp vrf all all summary
+        rib:
+          - show bgp ipv4 unicast
+        neighbor_ribs:
+          - show ip bgp neighbors _neigh_ routes
+          - show ip bgp neighbors _neigh_ received-routes
+          - show ip bgp neighbors _neigh_ advertised-routes
+      vrf:
+        rib:
+          - show bgp vrf all ipv4 unicast
+        neighbor_ribs:
+          - show ip bgp vrf _vrf_ neighbors _neigh_ routes
+          - show ip bgp vrf _vrf_ neighbors _neigh_ received-routes
+          - show ip bgp vrf _vrf_ neighbors _neigh_ advertised-routes
+  checkpointgaia:
+    topology:
+      - show lldp neighbors detail
+    version:
+      - show version all
+    interface:
+      - show interfaces all
+      - show bonding groups
+    system:
+      - cphaprob -a if
+      - cphaprob role
+      - cphaprob state
+      - show cluster members interfaces all
+    routes_v4:
+      global:
+        - show route all
+    bgp_v4:
+      global:
+        - show route bgp detailed
+        - show bgp peers detailed
+  a10:
+    topology:
+      - show lldp neighbors detail
+    version:
+      - show version
+    interface:
+      - show interfaces
+    system:
+      - show partition
+    slb:
+      - show slb virtual-server all-partitions
+      - show slb virtual-server bind
+    routes_v4:
+      global:
+        - show ip route database
+        - show ip route all
+        - show ip route acos
+    bgp_v4:
+      global:
+        - show ip bgp summary
+        - show ip bgp neigbhors
+        - show ip bgp
+    partition:
+      slb:
+        - show slb virtual-server bind
