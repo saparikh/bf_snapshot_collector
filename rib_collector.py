@@ -360,7 +360,7 @@ def get_xr_rib(device_session: dict, device_name: str, output_path: str, logger)
     return status
 
 
-OS_COLLECTOR_FUNCTION = {
+OS_RIB_COLLECTOR_FUNCTION = {
     "cisco_nxos": get_nxos_rib,
     "cisco_xr": get_xr_rib,
 }
@@ -407,11 +407,11 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
             }
 
             output_path = f"{collection_directory}/{snapshot_name}/show/"
-            cfg_func = OS_COLLECTOR_FUNCTION.get(device_os)
-            if cfg_func is None:
+            rib_func = OS_RIB_COLLECTOR_FUNCTION.get(device_os)
+            if rib_func is None:
                 logger.error(f"No collection function for {device_name} running {device_os}")
             else:
-                future = pool.submit(cfg_func, device_session=device_session, device_name=device_name,
+                future = pool.submit(rib_func, device_session=device_session, device_name=device_name,
                                      output_path=output_path, logger=logger)
                 future_list.append(future)
 
