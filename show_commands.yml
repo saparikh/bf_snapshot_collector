@@ -46,6 +46,8 @@ all:
         - show route vrf all
     bgp_v4:
       global:
+        summary:
+          - show bgp all all summary
         neighbors:
           - show bgp all all neighbors
         rib:
@@ -81,8 +83,10 @@ all:
         - show ip route vrf all
     bgp_v4:
       global:
+        neighbors:
+          - show bgp all neighbors # no genie parser
         summary:
-          - show bgp vrf all all summary
+          - show bgp all summary  # no genie parser
         rib:
           - show bgp ipv4 unicast
         neighbor_ribs:
@@ -90,6 +94,10 @@ all:
           - show ip bgp neighbors _neigh_ received-routes
           - show ip bgp neighbors _neigh_ advertised-routes
       vrf:
+        neighbors:
+          - show bgp vrf all all neighbors
+        summary:
+          - show bgp vrf all all summary
         rib:
           - show bgp vrf all ipv4 unicast
         neighbor_ribs:
@@ -138,6 +146,6 @@ all:
         - show ip bgp summary
         - show ip bgp neigbhors
         - show ip bgp
-    partition:
-      slb:
-        - show slb virtual-server bind
+#    partition:   # this command requires parsing the partition output and is not currently handled
+#      slb:
+#        - show slb virtual-server bind
