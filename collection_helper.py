@@ -100,6 +100,7 @@ class RetryingNetConnect(object):
                     return _output
         except Exception:
             self._logger.exception(f"Command {cmd} to {self._device_name} failed")
+            #todo: determine if we should return None instead of the pass statement
             pass
         else:
             self._logger.debug(f"Output of {cmd} to {self._device_name}: {_output}")
@@ -163,6 +164,7 @@ def get_show_commands(commands_file: Text) -> Dict:
         raise Exception(f"{commands} is not properly formatted")
 
     return commands['all']
+
 
 def write_output_to_file(device_name: Text, output_path: Text, cmd: Text, cmd_output: Text, prepend_text=None):
     """
@@ -314,7 +316,7 @@ def parse_genie(device_name, cli_output, command=None, os=None, logger=None):
             return parsed_output
         except Exception as e:
             logger.error(
-                "genie_parse: {0} - Failed to parse command output.".format(e)
+                f"genie_parse: Failed to parse command {cmd} output. {str(e)}"
             )
         # what is returned if the try fails?
         # shouldn't there be a default value returned that you can check for?

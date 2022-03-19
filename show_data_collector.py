@@ -16,7 +16,6 @@ def get_nxos_data(device_session: dict, device_name: str, output_path: str, cmd_
     """
     Default config collector. Works for Cisco and Juniper devices.
     """
-    cmd_timer = 1200
     device_os = "nxos"  # used for cisco genie parsers
     start_time = time.time()
     logger.info(f"Trying to connect to {device_name} at {start_time}")
@@ -40,22 +39,16 @@ def get_nxos_data(device_session: dict, device_name: str, output_path: str, cmd_
 
     logger.info(f"Running show commands for {device_name} at {time.time()}")
 
-
-    # todo: need to handle scenarios in which command is invalid and router returns an error like:
-    # DEVICE01# show ip ospf neighbor
-    #                 ^
-    # % Invalid command at '^' marker.
-    #
-    # a local patch for this issue is required to handle this
-    # https://github.com/ktbyers/netmiko/issues/2682
-
     for cmd_group in cmd_dict.keys():
+        cmd_timer = 120     # set the general command timeout to 2 minutes
 
         if cmd_group in ["bgp_v4"]:
             # todo: handle bgp rib collection
+            cmd_timer = 1200  # set the BGP RIB command timeout to 20 minutes
             continue
         # handle global and vrf specific IPv4 route commands
         if cmd_group == "routes_v4":
+            cmd_timer = 1200  # set the RIB command timeout to 20 minutes
             cmd_list = []
             for scope, cmds in cmd_dict['routes_v4'].items():
                 cmd_list.extend(cmds)
@@ -104,7 +97,6 @@ def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_di
     """
     Default config collector. Works for Cisco and Juniper devices.
     """
-    cmd_timer = 1200
     device_os = "iosxr"  # used for cisco genie parsers
     start_time = time.time()
     logger.info(f"Trying to connect to {device_name} at {start_time}")
@@ -130,11 +122,16 @@ def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_di
     logger.info(f"Running show commands for {device_name} at {time.time()}")
 
     for cmd_group in cmd_dict.keys():
+        cmd_timer = 120     # set the general command timeout to 2 minutes
+
         if cmd_group in ["bgp_v4"]:
             #todo: handle bgp rib collection
+            cmd_timer = 1200  # set the BGP RIB command timeout to 20 minutes
             continue
         # handle global and vrf specific IPv4 route commands
         if cmd_group == "routes_v4":
+            cmd_timer = 1200  # set the RIB command timeout to 20 minutes
+
             cmd_list = []
             for scope, cmds in cmd_dict['routes_v4'].items():
                 cmd_list.extend(cmds)
