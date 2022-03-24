@@ -84,9 +84,9 @@ all:
     bgp_v4:
       global:
         neighbors:
-          - show bgp all neighbors # no genie parser
+          - show bgp all neighbors
         summary:
-          - show bgp all summary  # no genie parser
+          - show bgp all summary
         rib:
           - show bgp ipv4 unicast
         neighbor_ribs:

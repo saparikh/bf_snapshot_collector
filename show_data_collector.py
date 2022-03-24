@@ -278,7 +278,7 @@ def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_di
                 else:
                     logger.error(f"Unknown {scope} with commands {scope_cmds} under bgp_v4 command dict")
         # handle global and vrf specific IPv4 route commands
-        if cmd_group == "routes_v4":
+        elif cmd_group == "routes_v4":
             cmd_timer = 1200  # set the RIB command timeout to 20 minutes
             cmd_list = []
             for scope, cmds in cmd_dict['routes_v4'].items():
