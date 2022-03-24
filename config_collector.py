@@ -169,7 +169,7 @@ def get_config_a10(
         output = net_connect.run_command(cmd, cmd_timer, pattern=prompt_pattern)
     except Exception as e:
         logger.exception(f"Failed to get output of {cmd}, going to sleep 10 minutes and retry")
-        sleep(600)
+        time.sleep(600)
         # reconnect to the device and run the command again
         try:
             net_connect = RetryingNetConnect(device_name, device_session, device_name)
