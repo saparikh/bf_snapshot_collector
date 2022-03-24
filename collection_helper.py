@@ -324,6 +324,10 @@ def parse_genie(device_name, cli_output, command=None, os=None, logger=None):
     # Try to parse the output
     # If OS is IOS, ansible could have passed in IOS, but the Genie device-type is actually IOS-XE,
     # so we will try to parse both.
+
+    if cli_output is None:
+        logger.error(f"No CLI output for {command} on {device_name}")
+        return None
     if os == "ios":
         try:
             return _parse(device_name, cli_output, command, "ios", logger)

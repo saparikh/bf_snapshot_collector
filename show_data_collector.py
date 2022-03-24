@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
 from collection_helper import (get_inventory, write_output_to_file, custom_logger, RetryingNetConnect,
-                               CollectionStatus, AnsibleOsToNetmikoOs, get_show_commands)
+                               CollectionStatus, AnsibleOsToNetmikoOs, get_show_commands, parse_genie)
 
 
 def get_nxos_data(device_session: dict, device_name: str, output_path: str, cmd_dict: dict, logger) -> Dict:
@@ -42,12 +42,75 @@ def get_nxos_data(device_session: dict, device_name: str, output_path: str, cmd_
     for cmd_group in cmd_dict.keys():
         cmd_timer = 120     # set the general command timeout to 2 minutes
 
-        if cmd_group in ["bgp_v4"]:
-            # todo: handle bgp rib collection
+        if cmd_group == "bgp_v4":
+            # need to get the list of BGP neighbors per VRF in order to collect per neighbor RIBs
+            # The  mechanism for this is to run the command "show bgp vrf all all summary" and
+            # use Cisco Genie parser to extract the list of { vrf, bgp_neighbor } maps
+            #
+            # rather than rely on this command being in the command list, if there are any commands
+            # under "bgp_v4", we will run this command.
+            #
+            cmd = "show bgp vrf all all summary"
+            cmd_timer = 300     # set BGP neighbor command timeout to 5 minutes
+            bgp_neighbors = {}
+            cmd_list = []
+            logger.info(f"Running {cmd} on {device_name}")
+            try:
+                output = net_connect.run_command(cmd, cmd_timer)
+                logger.debug(f"Command output: {output}")
+            except Exception as e:
+                status['message'] = f"{cmd} was last command to fail. Exception {str(e)}"
+                status['failed_commands'].append(cmd)
+                logger.error(f"{cmd} failed")
+            else:
+                write_output_to_file(device_name, output_path, cmd, output)
+                logger.info(f"Attempting to parse output of {cmd} on {device_name}")
+                parsed_output = parse_genie(device_name, output, cmd, device_os, logger)
+                logger.debug(f"Parsed Command output: {parsed_output}")
+                if parsed_output is not None:
+                    bgp_neighbors = parsed_output
+                partial_collection = True
+
             cmd_timer = 1200  # set the BGP RIB command timeout to 20 minutes
-            continue
+
+            for scope, scope_cmds in cmd_dict['bgp_v4'].items():
+                if scope == "global":
+                    for subscope, cmds in scope_cmds.items():
+                        if subscope == "neighbor_ribs":
+                            if len(bgp_neighbors) == 0:
+                                logger.info(f"No bgp neighbors found for {device_name}")
+                                continue
+                            for vrf, vrf_details in bgp_neighbors['vrf'].items():
+                                if vrf == 'default':
+                                    for bgp_neighbor in vrf_details['neighbor'].keys():
+                                        if ":" not in bgp_neighbor:
+                                            for cmd in cmds:
+                                                _cmd = cmd.replace("_neigh_", bgp_neighbor)
+                                                cmd_list.append(_cmd)
+                        else:
+                            cmd_list.extend(cmds)
+                elif scope == "vrf":
+                    for subscope, cmds in scope_cmds.items():
+                        if subscope == "neighbor_ribs":
+                            if len(bgp_neighbors) == 0:
+                                logger.info(f"No bgp neighbors found for {device_name}")
+                                continue
+                            for vrf, vrf_details in bgp_neighbors['vrf'].items():
+                                # ignore default VRF since it is already taken care of
+                                # ignore management VRF - mgmt and management are common names for it
+                                if vrf.lower() not in ['default', 'mgmt', 'management']:
+                                    for bgp_neighbor in vrf_details['neighbor'].keys():
+                                        if ":" not in bgp_neighbor:
+                                            for cmd in cmds:
+                                                _cmd = cmd.replace("_neigh_", bgp_neighbor)
+                                                _cmd = _cmd.replace("_vrf_", vrf)
+                                                cmd_list.append(_cmd)
+                        else:
+                            cmd_list.extend(cmds)
+                else:
+                    logger.error(f"Unknown {scope} with commands {scope_cmds} under bgp_v4 command dict")
         # handle global and vrf specific IPv4 route commands
-        if cmd_group == "routes_v4":
+        elif cmd_group == "routes_v4":
             cmd_timer = 1200  # set the RIB command timeout to 20 minutes
             cmd_list = []
             for scope, cmds in cmd_dict['routes_v4'].items():
@@ -124,14 +187,99 @@ def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_di
     for cmd_group in cmd_dict.keys():
         cmd_timer = 120     # set the general command timeout to 2 minutes
 
-        if cmd_group in ["bgp_v4"]:
-            #todo: handle bgp rib collection
+        if cmd_group == "bgp_v4":
+            # need to get the list of BGP neighbors per VRF in order to collect per neighbor RIBs
+            # need to run a command for default VRF "show bgp all all neighbors" and one for non-default
+            # VRFs "show bgp vrf all neighbors" and then parse the output using Cisco genie parser
+            #
+            # rather than rely on these commands being in the command list, if there are any commands
+            # under "bgp_v4", we will run this command.
+            #
+            # get BGP neighbors for default VRF
+            cmd_timer = 300     # set BGP neighbor command timeout to 5 minutes
+            global_bgp_neighbors = {}
+            vrf_bgp_neighbors = {}
+            cmd_list = []
+
+            # get BGP neighbors for default VRF
+            cmd = "show bgp all all neighbors"
+            logger.info(f"Running {cmd} on {device_name}")
+            try:
+                output = net_connect.run_command(cmd, cmd_timer)
+                logger.debug(f"Command output: {output}")
+            except Exception as e:
+                status['message'] = f"{cmd} was last command to fail. Exception {str(e)}"
+                status['failed_commands'].append(cmd)
+                logger.error(f"{cmd} failed")
+            else:
+                write_output_to_file(device_name, output_path, cmd, output)
+                logger.info(f"Attempting to parse output of {cmd} on {device_name}")
+                parsed_output = parse_genie(device_name, output, cmd, device_os, logger)
+                logger.debug(f"Parsed Command output: {parsed_output}")
+                if parsed_output is not None:
+                    global_bgp_neighbors = parsed_output
+                partial_collection = True
+
+            # get BGP neighbors for non-default VRFs
+            cmd = "show bgp vrf all neighbors"
+            logger.info(f"Running {cmd} on {device_name}")
+            try:
+                output = net_connect.run_command(cmd, cmd_timer)
+                logger.debug(f"Command output: {output}")
+            except Exception as e:
+                status['message'] = f"{cmd} was last command to fail. Exception {str(e)}"
+                status['failed_commands'].append(cmd)
+                logger.error(f"{cmd} failed")
+            else:
+                write_output_to_file(device_name, output_path, cmd, output)
+                logger.info(f"Attempting to parse output of {cmd} on {device_name}")
+                parsed_output = parse_genie(device_name, output, cmd, device_os, logger)
+                logger.debug(f"Parsed Command output: {parsed_output}")
+                if parsed_output is not None:
+                    vrf_bgp_neighbors = parsed_output
+                partial_collection = True
+
             cmd_timer = 1200  # set the BGP RIB command timeout to 20 minutes
-            continue
+
+            for scope, scope_cmds in cmd_dict['bgp_v4'].items():
+                if scope == "global":
+                    for subscope, cmds in scope_cmds.items():
+                        if subscope == "neighbor_ribs":
+                            if len(global_bgp_neighbors) == 0:
+                                logger.info(f"No bgp neighbors found for default VRF on {device_name}")
+                                continue
+                            for vrf, vrf_details in global_bgp_neighbors['instance']['all']['vrf'].items():
+                                for bgp_neighbor in vrf_details['neighbor'].keys():
+                                    if ":" not in bgp_neighbor:  # skip ipv6 peers
+                                        for cmd in cmds:
+                                            _cmd = cmd.replace("_neigh_", bgp_neighbor)
+                                            cmd_list.append(_cmd)
+                        else:
+                            cmd_list.extend(cmds)
+                elif scope == "vrf":
+                    for subscope, cmds in scope_cmds.items():
+                        if subscope == "neighbor_ribs":
+                            if len(vrf_bgp_neighbors) == 0:
+                                logger.info(f"No bgp neighbors found for non default VRFs on {device_name}")
+                                continue
+                            for vrf, vrf_details in vrf_bgp_neighbors['instance']['all']['vrf'].items():
+                                # ignore default VRF since it is already taken care of
+                                # ignore management VRF - mgmt and management are common names for it
+                                if vrf.lower() in ["mgmt", "management", "default"]:
+                                    continue
+                                for bgp_neighbor in vrf_details['neighbor'].keys():
+                                    if ":" not in bgp_neighbor:  # skip ipv6 peers
+                                        for cmd in cmds:
+                                            _cmd = cmd.replace("_neigh_", bgp_neighbor)
+                                            _cmd = _cmd.replace("_vrf_", vrf)
+                                            cmd_list.append(_cmd)
+                        else:
+                            cmd_list.extend(cmds)
+                else:
+                    logger.error(f"Unknown {scope} with commands {scope_cmds} under bgp_v4 command dict")
         # handle global and vrf specific IPv4 route commands
         if cmd_group == "routes_v4":
             cmd_timer = 1200  # set the RIB command timeout to 20 minutes
-
             cmd_list = []
             for scope, cmds in cmd_dict['routes_v4'].items():
                 cmd_list.extend(cmds)
@@ -139,7 +287,7 @@ def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_di
             cmd_list = cmd_dict.get(cmd_group)
 
         for cmd in cmd_list:
-            logger.info(f"Running {cmd} on {device_name}")
+            logger.info(f"Running {cmd} from {cmd_group} on {device_name}")
             try:
                 output = net_connect.run_command(cmd, cmd_timer)
                 logger.debug(f"Command output: {output}")
