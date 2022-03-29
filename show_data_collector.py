@@ -12,7 +12,6 @@ from collection_helper import (get_inventory, write_output_to_file, custom_logge
                                CollectionStatus, AnsibleOsToNetmikoOs, get_show_commands, parse_genie)
 
 
-
 def get_show_data(device_session: dict, device_name: str, output_path: str, cmd_dict: dict, logger) -> Dict:
     """
     Show command collector for all operating systems
@@ -393,6 +392,7 @@ def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_di
 
 
 OS_SHOW_COLLECTOR_FUNCTION = {
+    "cisco_ios": get_show_data,
     "cisco_nxos": get_nxos_data,
     "cisco_xr": get_xr_data,
     "arista_eos": get_show_data,
