@@ -122,11 +122,13 @@ all:
         - show route all
     bgp_v4:
       global:
-        - show route bgp detailed
-        - show bgp peers detailed
+        rib:
+          - show route bgp
+        neighbors:
+          - show bgp peers detailed
   a10:
     topology:
-      - show lldp neighbors detail
+      - show lldp neighbors
     version:
       - show version
     interface:
@@ -136,6 +138,7 @@ all:
     slb:
       - show slb virtual-server all-partitions
       - show slb virtual-server bind
+      - show slb virtual-server config all-partitions
     routes_v4:
       global:
         - show ip route database
@@ -143,9 +146,11 @@ all:
         - show ip route acos
     bgp_v4:
       global:
-        - show ip bgp summary
-        - show ip bgp neigbhors
-        - show ip bgp
+        neighbors:
+          - show ip bgp summary
+          - show ip bgp neighbors
+        rib:
+          - show ip bgp
 #    partition:   # this command requires parsing the partition output and is not currently handled
 #      slb:
 #        - show slb virtual-server bind
