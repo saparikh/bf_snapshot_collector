@@ -407,12 +407,14 @@ def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_di
 
 
 OS_SHOW_COLLECTOR_FUNCTION = {
+    "a10": get_show_data,
+    "arista_eos": get_show_data,
+    "checkpoint_gaia": get_show_data,
+    "cisco_asa": get_show_data,
     "cisco_ios": get_show_data,
     "cisco_nxos": get_nxos_data,
     "cisco_xr": get_xr_data,
-    "arista_eos": get_show_data,
-    "checkpoint_gaia": get_show_data,
-    "a10": get_show_data
+    "juniper_junos": get_show_data
 }
 
 

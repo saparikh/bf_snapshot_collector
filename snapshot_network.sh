@@ -50,6 +50,15 @@ python ${SCRIPT_DIR}/config_collector.py \
 #grep -rle '^# Exported by' ${SNAPSHOT_DIR} | xargs sed -i -E 's/^(# Exported by [^ ]+ on ).*$/\1REMOVED/g'
 
 
+echo "Collecting show commands from devices"
+python ${SCRIPT_DIR}/show_data_collector.py \
+    --inventory ${INVENTORY} \
+    --collection-dir ${COLLECTION_DIR} \
+    --snapshot-name ${SNAPSHOT_NAME} \
+    --command-file ${SCRIPT_DIR}/show_commands.yml \
+    --max-threads 60
+
+
 BF_NETWORK=${BF_NETWORK:="MY_NETWORK"}
 echo "Uploading snapshot ${SNAPSHOT_NAME} to network ${BF_NETWORK}"
 python ${SCRIPT_DIR}/bfe_upload_snapshot.py \
