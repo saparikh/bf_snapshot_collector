@@ -12,7 +12,7 @@ future==0.18.2
 grpcio==1.35.0
 idna==3.3
 netconan==0.12.3
--e git+https://github.com/ktbyers/netmiko.git@6e40610a7daea87129ff490a9131cf7d3b794dd5#egg=netmiko
+netmiko==4.0.0
 ntc-templates==3.0.0
 numpy==1.21.4
 ordered-set==4.0.2

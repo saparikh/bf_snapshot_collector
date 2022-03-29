@@ -42,8 +42,23 @@ def get_show_data(device_session: dict, device_name: str, output_path: str, cmd_
         cmd_timer = 120     # set the general command timeout to 2 minutes
 
         if cmd_group == "bgp_v4":
-            # todo: implement BGP RIB collection if no parsing and replacement in commands is required
-            continue
+            # todo: if you need per-neighbor RIB collection, write an OS specific function modeled after get_nxos_data
+            # todo: if VRF specific BGP data collection requires vrf name in command, write an OS specific function
+            # the generic show_data function will just grab BGP neighbors, summary, and RIBs for default and
+            # named VRF
+            cmd_timer = 1200  # set BGP command timer to 20 minutes
+            cmd_list = []
+
+            for scope, scope_cmds in cmd_dict['bgp_v4'].items():
+                if scope not in ["global", "vrf"]:
+                    logger.error(f"Unknown {scope} with commands {scope_cmds} under bgp_v4 command dict")
+                    continue
+                for subscope, cmds in scope_cmds.items():
+                    if subscope == "neighbor_ribs":
+                        logger.error(f"BGP neighbor RIB collection not supported on {device_name}")
+                        continue
+                    else:
+                        cmd_list.extend(cmds)
         # handle global and vrf specific IPv4 route commands
         elif cmd_group == "routes_v4":
             cmd_timer = 1200  # set the RIB command timeout to 20 minutes
@@ -396,7 +411,7 @@ OS_SHOW_COLLECTOR_FUNCTION = {
     "cisco_nxos": get_nxos_data,
     "cisco_xr": get_xr_data,
     "arista_eos": get_show_data,
-    "checkpointgaia": get_show_data,
+    "checkpoint_gaia": get_show_data,
     "a10": get_show_data
 }
 
