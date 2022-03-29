@@ -12,9 +12,89 @@ from collection_helper import (get_inventory, write_output_to_file, custom_logge
                                CollectionStatus, AnsibleOsToNetmikoOs, get_show_commands, parse_genie)
 
 
+
+def get_show_data(device_session: dict, device_name: str, output_path: str, cmd_dict: dict, logger) -> Dict:
+    """
+    Show command collector for all operating systems
+    """
+    start_time = time.time()
+    logger.info(f"Trying to connect to {device_name} at {start_time}")
+    status = {
+        "name": device_name,
+        "status": CollectionStatus.FAIL,
+        "failed_commands": [],
+        "message": "",
+    }
+
+    partial_collection = False
+
+    # todo: figure out to get logger name from the logger object that is passed in.
+    #  current setup just uses the device name for the logger name, so this works
+    try:
+        net_connect = RetryingNetConnect(device_name, device_session, device_name)
+    except Exception as e:
+        status['message'] = f"Connection failed. Exception {str(e)}"
+        status['failed_commands'].append("All")
+        return status
+
+    logger.info(f"Running show commands for {device_name} at {time.time()}")
+
+    for cmd_group in cmd_dict.keys():
+        cmd_timer = 120     # set the general command timeout to 2 minutes
+
+        if cmd_group == "bgp_v4":
+            # todo: implement BGP RIB collection if no parsing and replacement in commands is required
+            continue
+        # handle global and vrf specific IPv4 route commands
+        elif cmd_group == "routes_v4":
+            cmd_timer = 1200  # set the RIB command timeout to 20 minutes
+            cmd_list = []
+            for scope, cmds in cmd_dict['routes_v4'].items():
+                cmd_list.extend(cmds)
+        else:
+            cmd_list = cmd_dict.get(cmd_group)
+
+        for cmd in cmd_list:
+            logger.info(f"Running {cmd} on {device_name}")
+            try:
+                output = net_connect.run_command(cmd, cmd_timer)
+                logger.debug(f"Command output: {output}")
+            except Exception as e:
+                status['message'] = f"{cmd} was last command to fail. Exception {str(e)}"
+                status['failed_commands'].append(cmd)
+                logger.error(f"{cmd} failed")
+            else:
+                write_output_to_file(device_name, output_path, cmd, output)
+                partial_collection = True
+
+    end_time = time.time()
+    logger.info(f"Completed operational data collection for {device_name} in {end_time - start_time:.2f} seconds")
+    if len(status['failed_commands']) == 0:
+        status['status'] = CollectionStatus.PASS
+        status['message'] = "Collection successful"
+    elif partial_collection:
+        status['status'] = CollectionStatus.PARTIAL
+        status['message'] = "Collection partially successful"
+
+    net_connect.close()
+    return status
+
+    end_time = time.time()
+    logger.info(f"Completed operational data collection for {device_name} in {end_time-start_time:.2f} seconds")
+    if len(status['failed_commands']) == 0:
+        status['status'] = CollectionStatus.PASS
+        status['message'] = "Collection successful"
+    elif partial_collection:
+        status['status'] = CollectionStatus.PARTIAL
+        status['message'] = "Collection partially successful"
+
+    net_connect.close()
+    return status
+
+
 def get_nxos_data(device_session: dict, device_name: str, output_path: str, cmd_dict: dict, logger) -> Dict:
     """
-    Default config collector. Works for Cisco and Juniper devices.
+    Show data collection for Cisco NXOS devices.
     """
     device_os = "nxos"  # used for cisco genie parsers
     start_time = time.time()
@@ -158,7 +238,7 @@ def get_nxos_data(device_session: dict, device_name: str, output_path: str, cmd_
 
 def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_dict: dict, logger) -> Dict:
     """
-    Default config collector. Works for Cisco and Juniper devices.
+    Show data collector for Cisco IOS-XR devices.
     """
     device_os = "iosxr"  # used for cisco genie parsers
     start_time = time.time()
@@ -314,7 +394,10 @@ def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_di
 
 OS_SHOW_COLLECTOR_FUNCTION = {
     "cisco_nxos": get_nxos_data,
-    "cisco_xr": get_xr_data
+    "cisco_xr": get_xr_data,
+    "arista_eos": get_show_data,
+    "checkpointgaia": get_show_data,
+    "a10": get_show_data
 }
 
 
