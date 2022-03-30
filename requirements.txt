@@ -19,7 +19,7 @@ ordered-set==4.0.2
 pandas==1.1.5
 paramiko==2.8.0
 passlib==1.7.4
-protobuf==3.13.0
+protobuf==3.15.0
 pybatfish==2021.11.4.1095
 pybfe==2021.11.13.1806
 pycparser==2.21
