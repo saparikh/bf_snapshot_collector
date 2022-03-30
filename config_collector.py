@@ -316,7 +316,7 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
         device_os = AnsibleOsToNetmikoOs.get(grp_data['vars'].get('ansible_network_os'), None)
         if device_os is None:
             # todo: setup global logger to log this message to, for now print will get it into the bash script logs
-            print(f"Unsupported operating system {device_os}, skipping...")
+            print(f"Unsupported Ansible OS {grp_data['vars'].get('ansible_network_os')}, skipping...")
             continue
 
         for device_name, device_vars in grp_data.get('hosts').items():

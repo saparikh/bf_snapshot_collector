@@ -52,7 +52,9 @@ In the first three lines of this command, we are passing in username and passwor
 
 The third argument to the `snapshot_network.sh` script is optional and specifies where the output of the collector should be stored. The default value is the current working directory. 
 
-The snapshots are given a name based on collection time, such as `20211123_19:58:34`. Collected snapshots are uploaded to Batfish Enterprise but also left on local drive in the collection directory under a folder with the snapshot name. The logs will be under the folder `logs/20211123_19:58:34` in the collection directory. 
+The snapshots are given a name based on collection time, such as `20211123_19:58:34`. Collected snapshots are uploaded to Batfish but also left on local drive in the collection directory under a folder with the snapshot name. The logs will be under the folder `logs/20211123_19:58:34` in the collection directory. 
+
+####Note: The script also collects some standard show command output. This data is useable natively with Batfish Enterprise, but not with Batfish. Show data collection can take a long time, so if you do not want or need that data, remove the appropriate lines from the bash script.
 
 ## When using Batfish Enterprise
 
