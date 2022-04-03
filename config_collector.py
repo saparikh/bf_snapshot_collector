@@ -9,8 +9,10 @@ from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
+import netmiko.exceptions
+
 from collection_helper import (get_inventory, write_output_to_file, custom_logger, RetryingNetConnect,
-                               CollectionStatus, AnsibleOsToNetmikoOs, a10_parse_version)
+                               CollectionStatus, CollectionFailureReason, AnsibleOsToNetmikoOs, a10_parse_version)
 
 
 def get_config(device_session: dict, device_name: str, device_command: str, output_path: str, logger) -> Dict:
@@ -22,12 +24,25 @@ def get_config(device_session: dict, device_name: str, device_command: str, outp
     status = {
         "name": device_name,
         "status": CollectionStatus.FAIL,
+        "reason": CollectionFailureReason.OTHER,
         "message": "",
     }
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
     try:
         net_connect = RetryingNetConnect(device_name, device_session, device_name)
+    except netmiko.exceptions.NetmikoTimeoutException as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.CONNECT_TIMEOUT
+        return status
+    except netmiko.exceptions.NetmikoAuthenticationException as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.AUTH
+        return status
+    except netmiko.exceptions.ReadTimeout as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.READ_TIMEOUT
+        return status
     except Exception as e:
         status['message'] = f"Connection failed. Exception {e}"
         return status
@@ -53,13 +68,26 @@ def get_config_eos(device_session: dict, device_name: str, device_command: str, 
     status = {
         "name": device_name,
         "status": CollectionStatus.FAIL,
+        "reason": CollectionFailureReason.OTHER,
         "message": "",
     }
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
     try:
         net_connect = RetryingNetConnect(device_name, device_session, device_name)
-        net_connect.enable()  # enter enable mode
+        net_connect.enable()
+    except netmiko.exceptions.NetmikoTimeoutException as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.CONNECT_TIMEOUT
+        return status
+    except netmiko.exceptions.NetmikoAuthenticationException as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.AUTH
+        return status
+    except netmiko.exceptions.ReadTimeout as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.READ_TIMEOUT
+        return status
     except Exception as e:
         status['message'] = f"Connection failed. Exception {e}"
         return status
@@ -85,12 +113,25 @@ def get_config_cumulus(device_session: dict, device_name: str, device_command: s
     status = {
         "name": device_name,
         "status": CollectionStatus.FAIL,
+        "reason": CollectionFailureReason.OTHER,
         "message": "",
     }
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
     try:
         net_connect = RetryingNetConnect(device_name, device_session, device_name)
+    except netmiko.exceptions.NetmikoTimeoutException as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.CONNECT_TIMEOUT
+        return status
+    except netmiko.exceptions.NetmikoAuthenticationException as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.AUTH
+        return status
+    except netmiko.exceptions.ReadTimeout as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.READ_TIMEOUT
+        return status
     except Exception as e:
         status['message'] = f"Connection failed. Exception {e}"
         return status
@@ -137,12 +178,25 @@ def get_config_a10(
     status = {
         "name": device_name,
         "status": CollectionStatus.FAIL,
+        "reason": CollectionFailureReason.OTHER,
         "message": "",
     }
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
     try:
         net_connect = RetryingNetConnect(device_name, device_session, device_name)
+    except netmiko.exceptions.NetmikoTimeoutException as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.CONNECT_TIMEOUT
+        return status
+    except netmiko.exceptions.NetmikoAuthenticationException as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.AUTH
+        return status
+    except netmiko.exceptions.ReadTimeout as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.READ_TIMEOUT
+        return status
     except Exception as e:
         status['message'] = f"Connection failed. Exception {e}"
         return status
@@ -228,12 +282,25 @@ def get_config_checkpoint(device_session: dict, device_name: str, device_command
     status = {
         "name": device_name,
         "status": CollectionStatus.FAIL,
+        "reason": CollectionFailureReason.OTHER,
         "message": "",
     }
     # todo: figure out to get logger name from the logger object that is passed in.
     #  current setup just uses the device name for the logger name, so this works
     try:
         net_connect = RetryingNetConnect(device_name, device_session, device_name)
+    except netmiko.exceptions.NetmikoTimeoutException as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.CONNECT_TIMEOUT
+        return status
+    except netmiko.exceptions.NetmikoAuthenticationException as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.AUTH
+        return status
+    except netmiko.exceptions.ReadTimeout as e:
+        status['message'] = f"Connection failed. Exception {e}"
+        status['reason'] = CollectionFailureReason.READ_TIMEOUT
+        return status
     except Exception as e:
         status['message'] = f"Connection failed. Exception {e}"
         return status
@@ -357,13 +424,31 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
                 future_list.append(future)
 
     # TODO: revisit exception handling
-    failed_devices = [future.result()['name'] for future in as_completed(future_list) if
-                      future.result()['status'] != CollectionStatus.PASS]
+    failed_devices = {
+        CollectionFailureReason.NO_FAILURE: [],
+        CollectionFailureReason.AUTH: [],
+        CollectionFailureReason.READ_TIMEOUT: [],
+        CollectionFailureReason.CONNECT_TIMEOUT: [],
+        CollectionFailureReason.OTHER: []
+    }
+    any_failures = False
+
+    for future in as_completed(future_list):
+        if future.result()['status'] != CollectionStatus.PASS:
+            any_failures = True
+            reason = future.result()['reason']
+            failed_devices[reason].append(future.result()['name'])
+
+    # failed_devices = [future.result()['name'] for future in as_completed(future_list) if
+    #                   future.result()['status'] != CollectionStatus.PASS]
+    # if len(failed_devices) != 0:
+    #     print(f"Collection failed for {len(failed_devices)} devices: {failed_devices}")
+
 
     end_time = time.time()
 
-    if len(failed_devices) != 0:
-        print(f"Collection failed for {len(failed_devices)} devices: {failed_devices}")
+    if any_failures:
+        print(f"Collection failed for devices: \n {failed_devices}")
 
     print(f"Completed snapshot collection {time.strftime('%Y-%m-%d %H:%M %Z', time.localtime(end_time))}")
     print(f"Total collection time {end_time - start_time} seconds")

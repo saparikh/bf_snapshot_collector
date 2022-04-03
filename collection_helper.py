@@ -5,7 +5,8 @@ from time import sleep
 from typing import Text, Dict, List
 import logging
 import yaml
-from netmiko import ConnectHandler, NetmikoTimeoutException
+from netmiko import ConnectHandler
+from netmiko.exceptions import NetmikoTimeoutException, NetmikoAuthenticationException, ReadTimeout
 from enum import Enum
 from ttp import ttp
 import re
@@ -25,6 +26,13 @@ class CollectionStatus(Enum):
     FAIL = 2
     PARTIAL = 3
 
+
+class CollectionFailureReason(Enum):
+    NO_FAILURE = 1
+    CONNECT_TIMEOUT = 2
+    AUTH = 3
+    READ_TIMEOUT = 4
+    OTHER = 5
 
 AnsibleOsToNetmikoOs = {
     "arista.eos.eos": "arista_eos",
@@ -55,10 +63,10 @@ class RetryingNetConnect(object):
                     self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
                 except Exception as exc:
                     self._logger.exception(f"2nd attempt at connecting failed, skipping device {self._device_name}.")
-                    raise Exception
+                    raise
             else:
                 self._logger.exception(f"Skipped data collection for {self._device_name}, could not connect")
-                raise Exception
+                raise
         except socket.error:
             self._logger.exception(f"Socket error for {cmd} to {self._device_name}")
             # wait 60 seconds and then try to re-establish a new SSH session
@@ -67,10 +75,10 @@ class RetryingNetConnect(object):
                 self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
             except Exception:
                 self._logger.exception(f"Could not reconnect to {self._device_name}")
-                raise Exception
+                raise
         except Exception:
             self._logger.exception(f"Connection to {self._device_name} failed")
-            raise Exception
+            raise
         self._base_prompt = self._net_connect.base_prompt
         self._logger.info(f"Netmiko prompt: {self._net_connect.base_prompt}")
 
@@ -87,7 +95,7 @@ class RetryingNetConnect(object):
                 self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
             except Exception:
                 self._logger.exception(f"Could not reconnect to {self._device_name}")
-                raise Exception
+                raise
             else:
                 try:
                     self._logger.info("Connection re-established, re-trying previous command")
