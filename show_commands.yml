@@ -126,6 +126,13 @@ all:
           - show route bgp
         neighbors:
           - show bgp peers detailed
+  juniper:
+    topology:
+      - show lldp neighbors
+    interface:
+      - show interfaces
+    version:
+      - show version
   a10:
     topology:
       - show lldp neighbors
