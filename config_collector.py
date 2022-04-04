@@ -228,16 +228,14 @@ def get_config_a10(
         try:
             net_connect = RetryingNetConnect(device_name, device_session, device_name)
             output = net_connect.run_command(cmd, cmd_timer, pattern=prompt_pattern)
-            logger.debug(f"Command output: {output}")
-            write_output_to_file(device_name, output_path, cmd, output)
         except Exception as e:
             logger.exception(f"Retry for show version failed")
             status['message'] = f"Connection failed. Exception {e}"
             return status
+        else:
+            logger.debug(f"Command output: {output}")
     else:
         logger.debug(f"Command output: {output}")
-        write_output_to_file(device_name, output_path, cmd, output)
-        # will return dictionary key to use to select configuration command
 
     if output is None:
         logger.error(f"Failed to get output for {cmd}")
