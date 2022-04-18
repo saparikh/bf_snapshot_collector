@@ -39,7 +39,7 @@ def get_show_data(device_session: dict, device_name: str, output_path: str, cmd_
     logger.info(f"Running show commands for {device_name} at {time.time()}")
 
     for cmd_group in cmd_dict.keys():
-        cmd_timer = 120     # set the general command timeout to 2 minutes
+        cmd_timer = 240     # set the general command timeout to 4 minutes
 
         if cmd_group == "bgp_v4":
             # todo: if you need per-neighbor RIB collection, write an OS specific function modeled after get_nxos_data
@@ -134,7 +134,7 @@ def get_nxos_data(device_session: dict, device_name: str, output_path: str, cmd_
     logger.info(f"Running show commands for {device_name} at {time.time()}")
 
     for cmd_group in cmd_dict.keys():
-        cmd_timer = 120     # set the general command timeout to 2 minutes
+        cmd_timer = 240     # set the general command timeout to 4 minutes
 
         if cmd_group == "bgp_v4":
             # need to get the list of BGP neighbors per VRF in order to collect per neighbor RIBs
@@ -279,7 +279,7 @@ def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_di
     logger.info(f"Running show commands for {device_name} at {time.time()}")
 
     for cmd_group in cmd_dict.keys():
-        cmd_timer = 120     # set the general command timeout to 2 minutes
+        cmd_timer = 240     # set the general command timeout to 4 minutes
 
         if cmd_group == "bgp_v4":
             # need to get the list of BGP neighbors per VRF in order to collect per neighbor RIBs
