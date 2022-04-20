@@ -196,13 +196,15 @@ def write_output_to_file(device_name: Text, output_path: Text, cmd: Text, cmd_ou
 
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     with open(file_path, "w") as f:
+        if cmd_output is None:
+            f.write("Command output was None")
+            return
+
         if prepend_text is not None:
             f.write(prepend_text)
             f.write("\n")
-        if cmd_output is None:
-            f.write("Command output was None")
-        else:
-            f.write(cmd_output)
+
+        f.write(cmd_output)
 
 
 def a10_parse_version(input: Text) -> str:
