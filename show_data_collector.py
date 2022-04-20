@@ -434,6 +434,7 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
          collection_directory: str, commands_file: str, log_level: int) -> None:
     pool = ThreadPoolExecutor(max_threads)
     future_list = []
+    task_info_list = []
 
     start_time = time.time()
     print(f"### Starting operational data collection: {time.strftime('%Y-%m-%d %H:%M %Z', time.localtime(start_time))}")
@@ -486,13 +487,35 @@ def main(inventory: Dict, max_threads: int, username: str, password: str, snapsh
             }
 
             output_path = f"{collection_directory}/{snapshot_name}/show/"
+            # before sending the task save some information about each task, so you can get insight
+            # into which devices are taking too long to complete
+            task_info_list.append((device_name, op_func, device_session['device_type'], device_session['host']))
+
             future = pool.submit(op_func, device_session=device_session, device_name=device_name,
                                  output_path=output_path, cmd_dict=cmd_dict, logger=logger)
             future_list.append(future)
 
-    # TODO: revisit exception handling
-    failed_devices = [future.result()['name'] for future in as_completed(future_list) if
+    while True:
+        time.sleep(10)
+        running_tasks = []
+        for f, task_info in zip(future_list, task_info_list):
+            if not f.done():
+                running_tasks.append(task_info)
+        if len(running_tasks) == 0:
+            break  # all tasks finished
+        elif len(running_tasks) < 10:
+            # now there's only less than 10 tasks running, some might be stuck, log things about the running task
+            for task_info in running_tasks:
+                print(f"{task_info}")
+
+    # and then the rest is the same, except you don't need as_completed
+    failed_devices = [future.result()['name'] for future in future_list if
                       future.result()['status'] != CollectionStatus.PASS]
+
+
+    # # TODO: revisit exception handling
+    # failed_devices = [future.result()['name'] for future in as_completed(future_list) if
+    #                   future.result()['status'] != CollectionStatus.PASS]
 
     end_time = time.time()
 
