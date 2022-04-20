@@ -59,6 +59,12 @@ def get_config(device_session: dict, device_name: str, device_command: str, outp
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
     status['message'] = "Collection successful"
+    try:
+        net_connect.close()
+    except Exception as e:
+        logger.exception(f"Exception when closing netmiko connection: {str(e)}")
+        pass
+
     return status
 
 
@@ -104,6 +110,11 @@ def get_config_eos(device_session: dict, device_name: str, device_command: str, 
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
     status['message'] = "Collection successful"
+    try:
+        net_connect.close()
+    except Exception as e:
+        logger.exception(f"Exception when closing netmiko connection: {str(e)}")
+        pass
     return status
 
 
@@ -165,6 +176,11 @@ def get_config_cumulus(device_session: dict, device_name: str, device_command: s
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
     status['message'] = "Collection successful"
+    try:
+        net_connect.close()
+    except Exception as e:
+        logger.exception(f"Exception when closing netmiko connection: {str(e)}")
+        pass
     return status
 
 
@@ -269,6 +285,11 @@ def get_config_a10(
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
     status['message'] = "Collection successful"
+    try:
+        net_connect.close()
+    except Exception as e:
+        logger.exception(f"Exception when closing netmiko connection: {str(e)}")
+        pass
     return status
 
 def get_config_checkpoint(device_session: dict, device_name: str, device_command: str, output_path: str, logger) -> Dict:
@@ -341,6 +362,11 @@ def get_config_checkpoint(device_session: dict, device_name: str, device_command
     logger.info(f"Completed configuration collection for {device_name}")
     status['status'] = CollectionStatus.PASS
     status['message'] = "Collection successful"
+    try:
+        net_connect.close()
+    except Exception as e:
+        logger.exception(f"Exception when closing netmiko connection: {str(e)}")
+        pass
     return status
 
 

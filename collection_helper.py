@@ -67,6 +67,18 @@ class RetryingNetConnect(object):
             else:
                 self._logger.exception(f"Skipped data collection for {self._device_name}, could not connect")
                 raise
+        except ReadTimeout as exc:
+            if "Pattern not detected" in str(exc):
+                self._logger.error(f"Device {self._device_name} didn't return prompt in 20 seconds, re-trying connection in 60 seconds")
+                sleep(60)  # wait 60 seconds before retrying
+                try:
+                    self._net_connect = ConnectHandler(**self._device_session, encoding='utf-8')
+                except Exception as exc:
+                    self._logger.exception(f"2nd attempt at connecting failed, skipping device {self._device_name}.")
+                    raise
+            else:
+                self._logger.exception(f"Skipped data collection for {self._device_name}, could not connect")
+                raise
         except socket.error:
             self._logger.exception(f"Socket error for {cmd} to {self._device_name}")
             # wait 60 seconds and then try to re-establish a new SSH session
@@ -344,3 +356,24 @@ def parse_genie(device_name, cli_output, command=None, os=None, logger=None):
     else:
         return _parse(device_name, cli_output, command, os, logger)
 
+
+def get_device_credentials_ansible_vault(vault_file: Text, vault_pass_file: Text) -> Dict:
+
+    loader = DataLoader()
+    vault_secret = CLI.setup_vault_secrets(
+        loader=loader,
+        vault_ids=C.DEFAULT_VAULT_IDENTITY_LIST,
+        vault_password_files=[vault_pass_file],
+    )
+    vault = VaultLib(vault_secret)
+    vault_data = vault.decrypt(open(vault_file).read())
+
+    vault_values = vault_data.decode().split("\n")
+    creds = {}
+    for value in vault_values:
+        if value == "":
+            continue
+        _key, _val = value.replace(" ", "").split(":")
+        creds.update({_key: _val})
+
+    return creds

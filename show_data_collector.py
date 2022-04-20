@@ -102,7 +102,11 @@ def get_show_data(device_session: dict, device_name: str, output_path: str, cmd_
         status['status'] = CollectionStatus.PARTIAL
         status['message'] = "Collection partially successful"
 
-    net_connect.close()
+    try:
+        net_connect.close()
+    except Exception as e:
+        logger.exception(f"Exception when closing netmiko connection: {str(e)}")
+        pass
     return status
 
 
@@ -246,7 +250,11 @@ def get_nxos_data(device_session: dict, device_name: str, output_path: str, cmd_
         status['status'] = CollectionStatus.PARTIAL
         status['message'] = "Collection partially successful"
 
-    net_connect.close()
+    try:
+        net_connect.close()
+    except Exception as e:
+        logger.exception(f"Exception when closing netmiko connection: {str(e)}")
+        pass
     return status
 
 
@@ -402,7 +410,11 @@ def get_xr_data(device_session: dict, device_name: str, output_path: str, cmd_di
         status['status'] = CollectionStatus.PARTIAL
         status['message'] = "Collection partially successful"
 
-    net_connect.close()
+    try:
+        net_connect.close()
+    except Exception as e:
+        logger.exception(f"Exception when closing netmiko connection: {str(e)}")
+        pass
     return status
 
 
