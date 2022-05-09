@@ -40,7 +40,7 @@ all:
     routes_v4:
       global:
         - show route summary
-        - show route summary
+        - show route
       vrf:
         - show route vrf all summary
         - show route vrf all
